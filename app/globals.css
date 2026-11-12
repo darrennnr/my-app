@@ -378,3 +378,56 @@ svg { flex-shrink: 0; }
 .ann-check input { width: 18px; height: 18px; accent-color: #000; }
 .ann-form-actions { justify-content: flex-end; flex-wrap: wrap; }
 @media (max-width: 400px) { .ann-form-actions .btn-sm { flex: 1 1 100%; } }
+
+/* ---------- Jadwal: drag & drop ---------- */
+.ev {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  z-index: 2;
+}
+
+.ev.dragging {
+  cursor: grabbing;
+  z-index: 10;
+  transition: none;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+  outline: 2px dashed rgba(10, 10, 10, 0.45);
+  outline-offset: -3px;
+}
+
+.tt-body.is-dragging {
+  cursor: grabbing;
+}
+
+.tt-col {
+  transition: background 0.12s;
+}
+
+.tt-col.drop-target {
+  background: rgba(219, 234, 254, 0.45);
+  border-radius: 10px;
+}
+
+.snap-layer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 56px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.snap-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed rgba(10, 10, 10, 0.1);
+}
+
+.snap-line.half {
+  border-top-style: dotted;
+  border-top-color: rgba(10, 10, 10, 0.06);
+}
