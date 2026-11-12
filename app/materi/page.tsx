@@ -1,15 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import AppShell from "../components/AppShell";
-import { ChevronDown, ChevronRight, FolderOpenIcon, SearchIcon, TasksIcon } from "../components/icons";
-
-const MATERI = Array.from({ length: 11 }, (_, i) => ({
-  id: i + 1,
-  title: "Matematika - 1",
-  dosen: "Dra. Rini Satiti, M. Si",
-  count: 15,
-}));
+import {
+  ChevronDown,
+  ChevronRight,
+  FolderOpenIcon,
+  SearchIcon,
+  TasksIcon,
+} from "../components/icons";
+import { MATERI } from "../lib/data";
 
 /** Halaman 6 — Materi */
 export default function MateriPage() {
@@ -28,7 +29,10 @@ export default function MateriPage() {
   return (
     <AppShell showSettings={false}>
       <p className="date-line">Kamis, 9 September 2026 - Minggu 3</p>
-      <h2 className="page-title"><TasksIcon size={30} />Materi</h2>
+      <h2 className="page-title">
+        <TasksIcon size={30} />
+        Materi
+      </h2>
 
       <label className="search">
         <SearchIcon size={24} style={{ color: "#999" }} />
@@ -54,16 +58,22 @@ export default function MateriPage() {
 
       <div className="materi-grid">
         {list.map((m) => (
-          <a key={m.id} href="#" className="card materi">
-            <div className="ico"><FolderOpenIcon size={26} /></div>
+          <Link key={m.id} href={`/materi/${m.id}`} className="card materi">
+            <div className="ico">
+              <FolderOpenIcon size={26} />
+            </div>
             <div className="row">
               <div>
-                <div className="t">{m.title}<br />{m.dosen}</div>
+                <div className="t">
+                  {m.title}
+                  <br />
+                  {m.dosen}
+                </div>
                 <div className="c">{m.count} Materi</div>
               </div>
               <ChevronRight size={22} />
             </div>
-          </a>
+          </Link>
         ))}
       </div>
       {list.length === 0 && <p className="empty">Materi tidak ditemukan.</p>}

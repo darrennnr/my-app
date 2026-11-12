@@ -199,4 +199,94 @@ export const PushPinIcon = ({ size, ...p }: P) => (
     <path d="M9 3.500h6l-1 6 3 3.500H7l3-3.500z" />
     <path d="M12 13v7.500" />
   </svg>
-);  
+);
+
+export const ArrowLeftIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} strokeWidth={1.8} {...p}>
+    <path d="M20 12H4M10 6l-6 6 6 6" />
+  </svg>
+);
+export const ChevronLeftIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} strokeWidth={1.8} {...p}>
+    <path d="m15 4-8 8 8 8" />
+  </svg>
+);
+export const DownloadIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <path d="M12 3.5v11M8 11l4 4 4-4" />
+    <path d="M4.5 17v2.5h15V17" />
+  </svg>
+);
+export const UploadIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <path d="M12 15V3.5M8 7l4-4 4 4" />
+    <path d="M4.5 17v2.5h15V17" />
+  </svg>
+);
+export const FilePdfIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} strokeWidth={1.7} {...p}>
+    <path d="M6 3h8l5 5v13H6z" />
+    <path d="M14 3v5h5" />
+    <path d="M9 12.5h6M9 16h6M9 19h4" />
+  </svg>
+);
+export const FileImageIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />
+    <circle cx="9" cy="10" r="1.8" />
+    <path d="m5 18 4.5-4.5 3 3 3-3L20 18" />
+  </svg>
+);
+export const FileArchiveIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} strokeWidth={1.7} {...p}>
+    <path d="M6 3h8l5 5v13H6z" />
+    <path d="M14 3v5h5" />
+    <path d="M11 12.5v1M11 15.5v1M11 18.5v1" />
+  </svg>
+);
+export const GridIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <rect x="4" y="4" width="7" height="7" rx="1.6" />
+    <rect x="13" y="4" width="7" height="7" rx="1.6" />
+    <rect x="4" y="13" width="7" height="7" rx="1.6" />
+    <rect x="13" y="13" width="7" height="7" rx="1.6" />
+  </svg>
+);
+export const ListIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} strokeWidth={1.8} {...p}>
+    <path d="M9 6h11M9 12h11M9 18h11" />
+    <circle cx="5" cy="6" r="1.2" fill="currentColor" stroke="none" />
+    <circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none" />
+    <circle cx="5" cy="18" r="1.2" fill="currentColor" stroke="none" />
+  </svg>
+);
+export const MailIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <rect x="3" y="5" width="18" height="14" rx="2.5" />
+    <path d="m4 7 8 6 8-6" />
+  </svg>
+);
+export const PhoneIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <path d="M6.5 3.5h3l1.5 4-2 1.4a12 12 0 0 0 6.1 6.1l1.4-2 4 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.5 5.7a2 2 0 0 1 2-2.2Z" />
+  </svg>
+);
+export const MapPinIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11Z" />
+    <circle cx="12" cy="10" r="2.6" />
+  </svg>
+);
+export const EditIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <path d="M4 20h4l11-11-4-4L4 16v4Z" />
+    <path d="m13.5 6.5 4 4" />
+  </svg>
+);
+export const IdIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} {...p}>
+    <rect x="3" y="5" width="18" height="14" rx="2.5" />
+    <circle cx="9" cy="11" r="2" />
+    <path d="M6 16c.6-1.6 1.7-2.4 3-2.4s2.4.8 3 2.4M14 10h4M14 14h4" />
+  </svg>
+);

@@ -15,7 +15,7 @@ import {
   UserCircleIcon,
   UserIcon,
   WalletIcon,
-  MegaphoneIcon
+  MegaphoneIcon,
 } from "./icons";
 
 const NAV = [
@@ -24,8 +24,8 @@ const NAV = [
   { href: "/tugas", label: "Tugas", Icon: TasksIcon },
   { href: "/materi", label: "Materi", Icon: DocIcon },
   { href: "/kas", label: "Kas", Icon: WalletIcon },
-  { href: "/pengumuman", label: "Pengumuman", Icon: MegaphoneIcon },   // <— baru
-  { href: "#", label: "Profil", Icon: UserIcon },
+  { href: "/pengumuman", label: "Pengumuman", Icon: MegaphoneIcon },
+  { href: "/profil", label: "Profil", Icon: UserIcon },
 ];
 
 export default function AppShell({
