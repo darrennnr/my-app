@@ -15,6 +15,7 @@ import {
   UserCircleIcon,
   UserIcon,
   WalletIcon,
+  MegaphoneIcon
 } from "./icons";
 
 const NAV = [
@@ -22,7 +23,8 @@ const NAV = [
   { href: "/jadwal", label: "Jadwal", Icon: CalendarIcon },
   { href: "/tugas", label: "Tugas", Icon: TasksIcon },
   { href: "/materi", label: "Materi", Icon: DocIcon },
-  { href: "/kas", label: "Kas", Icon: WalletIcon },   // <— baru
+  { href: "/kas", label: "Kas", Icon: WalletIcon },
+  { href: "/pengumuman", label: "Pengumuman", Icon: MegaphoneIcon },   // <— baru
   { href: "#", label: "Profil", Icon: UserIcon },
 ];
 

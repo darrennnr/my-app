@@ -181,3 +181,22 @@ export const CrossIcon = ({ size, ...p }: P) => (
     <path d="m6 6 12 12M18 6 6 18" />
   </svg>
 );
+
+export const MegaphoneIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} strokeWidth={1.8} {...p}>
+    <path d="M3.5 10v4a1 1 0 0 0 1 1H7l9 4.5v-15L7 9H4.5a1 1 0 0 0-1 1Z" />
+    <path d="M7 15l1.3 4.5a1 1 0 0 0 1 .7h1.2a.8.8 0 0 0 .8-1L10.700 16.500" />
+    <path d="M19.500 9.500a3.500 3.500 0 0 1 0 5" />
+  </svg>
+);
+export const PlusIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} strokeWidth={2.2} {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+export const PushPinIcon = ({ size, ...p }: P) => (
+  <svg {...base(size)} strokeWidth={1.8} {...p}>
+    <path d="M9 3.500h6l-1 6 3 3.500H7l3-3.500z" />
+    <path d="M12 13v7.500" />
+  </svg>
+);  

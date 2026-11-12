@@ -287,3 +287,94 @@ svg { flex-shrink: 0; }
 .bar { height: 12px; border-radius: 999px; background: #eee; overflow: hidden; margin: 2px 0 10px; }
 .bar i { display: block; height: 100%; background: var(--ok-dot); border-radius: 999px; transition: width 0.25s; }
 @media (max-width: 480px) { .recap { padding: 8px 16px 18px; } .rc-row { font-size: 15px; } }
+
+@media (max-width: 400px) {
+  .nav { gap: 2px; padding: 8px; }
+  .nav a { width: 38px; height: 38px; border-radius: 11px; }
+  .nav a svg { width: 22px; height: 22px; }
+}
+@media (max-width: 340px) {
+  .nav a { width: 34px; height: 34px; }
+  .nav a svg { width: 20px; height: 20px; }
+}
+
+/* ---------- Umum (aman jika sudah ada dari halaman Kas) ---------- */
+.with-ico { display: inline-flex; align-items: center; gap: 6px; }
+.chip.sm { font-size: 13px; padding: 3px 10px; border-radius: 8px; }
+.chip.c-blue { background: #d9e8fb; } .chip.c-peach { background: #fce9d9; }
+.chip.c-pink { background: #fbd9f6; } .chip.c-green { background: #eefdd9; }
+
+/* tombol kecil */
+.btn-sm {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 44px; padding: 0 20px; border-radius: 999px; font-size: 15px; white-space: nowrap;
+  transition: background 0.15s;
+}
+.btn-sm.black { background: #000; color: #fff; box-shadow: var(--shadow); }
+.btn-sm.black:hover { background: #222; }
+.btn-sm.line { background: #fff; box-shadow: var(--shadow); }
+.btn-sm.line:hover { background: #f1f1f1; }
+.btn-sm:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-sm:focus-visible, .ann-head:focus-visible, .cat:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
+.add-btn { margin-bottom: 14px; }
+@media (max-width: 420px) { .add-btn span { display: none; } .add-btn { width: 44px; padding: 0; } }
+
+/* ---------- Pengumuman: ringkasan ---------- */
+.ann-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 4px 0 20px; }
+@media (min-width: 640px) { .ann-stats { gap: 20px; max-width: 760px; } }
+.ann-stats .stat { padding: 14px 14px 16px; min-width: 0; }
+.ann-stats .stat .top { font-size: clamp(12px, 1.6vw, 18px); gap: 6px; }
+.ann-stats .stat .num { font-size: clamp(26px, 4.4vw, 46px); margin-top: 8px; }
+.ann-stats .dot { width: 18px; height: 18px; }
+@media (min-width: 640px) { .ann-stats .stat { padding: 20px 24px; } .ann-stats .dot { width: 26px; height: 26px; } }
+@media (max-width: 340px) { .ann-stats .stat .top { flex-direction: column; align-items: flex-start; } }
+
+/* ---------- Pengumuman: filter ---------- */
+.ann-tabs { margin: 16px 0 12px; }
+@media (max-width: 480px) { .ann-tabs { gap: 8px; } .ann-tabs .tab { font-size: 14px; height: 46px; } }
+.cat-row { display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: none; }
+.cat-row::-webkit-scrollbar { display: none; }
+.cat { flex: 0 0 auto; background: #fff; box-shadow: var(--shadow); border-radius: 999px; padding: 8px 18px; font-size: 15px; }
+.cat.on { background: var(--chip); }
+
+/* ---------- Pengumuman: daftar ---------- */
+.ann-grid { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; }
+@media (min-width: 1100px) { .ann-grid { grid-template-columns: 1fr 1fr; } }
+.ann { overflow: hidden; }
+.ann-head { display: flex; align-items: center; gap: 16px; width: 100%; padding: 16px 18px; text-align: left; }
+.ann-ico { width: 64px; height: 64px; border-radius: 16px; display: grid; place-items: center; flex-shrink: 0; }
+.ann-info { flex: 1; min-width: 0; display: grid; gap: 8px; }
+.ann-title { font-size: 17px; line-height: 1.3; display: flex; align-items: flex-start; gap: 8px; overflow-wrap: anywhere; }
+.udot { width: 10px; height: 10px; border-radius: 50%; background: #000; flex-shrink: 0; margin-top: 7px; }
+.ann-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 14px; }
+.ann-chev { transition: transform 0.18s; }
+.ann.open .ann-chev { transform: rotate(180deg); }
+@media (max-width: 480px) {
+  .ann-head { gap: 12px; padding: 14px; align-items: flex-start; }
+  .ann-ico { width: 48px; height: 48px; border-radius: 12px; }
+  .ann-ico svg { width: 22px; height: 22px; }
+  .ann-title { font-size: 15px; }
+  .ann-meta { font-size: 13px; }
+  .ann-chev { margin-top: 12px; }
+}
+
+.ann-detail { padding: 0 18px 18px; display: grid; gap: 14px; border-top: 1px dashed #e3e3e3; padding-top: 14px; margin: 0 4px; }
+@media (max-width: 480px) { .ann-detail { padding: 12px 10px 16px; } }
+.ann-body { font-size: 16px; line-height: 1.6; overflow-wrap: anywhere; }
+.ann-rows { display: grid; gap: 8px; font-size: 15px; color: #333; }
+.ann-rows div { display: flex; align-items: flex-start; gap: 10px; overflow-wrap: anywhere; }
+.ann-rows svg { margin-top: 2px; }
+.ann-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+@media (max-width: 400px) { .ann-actions .btn-sm { flex: 1 1 100%; } }
+
+/* ---------- Pengumuman: form ---------- */
+.ann-modal { max-height: calc(100dvh - 40px); overflow-y: auto; }
+.ann-input {
+  width: 100%; background: #f6f6f6; border: 1px solid transparent; border-radius: 14px;
+  padding: 12px 16px; font-size: 16px; outline: none; resize: vertical;
+}
+.ann-input:focus { border-color: #000; background: #fff; }
+.ann-check { display: flex; align-items: center; gap: 10px; font-size: 15px; cursor: pointer; }
+.ann-check input { width: 18px; height: 18px; accent-color: #000; }
+.ann-form-actions { justify-content: flex-end; flex-wrap: wrap; }
+@media (max-width: 400px) { .ann-form-actions .btn-sm { flex: 1 1 100%; } }
