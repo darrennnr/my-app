@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import AppShell from "../../components/AppShell";
 import {
   DocIcon,
@@ -17,12 +17,15 @@ import {
   SearchIcon,
   UploadIcon,
 } from "../../components/icons";
+import { Chip, DateLine, PageTitle } from "../../components/ui";
 import { MATERI } from "../../lib/data";
+import { cx } from "../../lib/utils";
 
-type Kind = "folder" | "pdf" | "doc" | "img" | "zip";
-type Item = { id: string; name: string; kind: Kind; info: string; date: string };
+type FileKind = "folder" | "pdf" | "doc" | "img" | "zip";
+type FileItem = { id: string; name: string; kind: FileKind; info: string; date: string };
+type ViewMode = "list" | "grid";
 
-const LABEL: Record<Kind, string> = {
+const KIND_LABEL: Record<FileKind, string> = {
   folder: "Folder",
   pdf: "PDF",
   doc: "Dokumen",
@@ -30,7 +33,7 @@ const LABEL: Record<Kind, string> = {
   zip: "Arsip",
 };
 
-const ITEMS: Item[] = [
+const ITEMS: FileItem[] = [
   { id: "f1", name: "Pertemuan 1 - Matriks", kind: "folder", info: "4 berkas", date: "9 Sep 2026" },
   { id: "f2", name: "Pertemuan 2 - Determinan", kind: "folder", info: "5 berkas", date: "8 Sep 2026" },
   { id: "f3", name: "Latihan & Pembahasan", kind: "folder", info: "6 berkas", date: "2 Sep 2026" },
@@ -43,7 +46,7 @@ const ITEMS: Item[] = [
   { id: "x7", name: "Rangkuman Minggu 1.docx", kind: "doc", info: "96 KB", date: "1 Sep 2026" },
 ];
 
-function ItemIcon({ kind, size = 22 }: { kind: Kind; size?: number }) {
+function KindIcon({ kind, size = 22 }: { kind: FileKind; size?: number }) {
   if (kind === "folder") return <FolderOpenIcon size={size} />;
   if (kind === "pdf") return <FilePdfIcon size={size} />;
   if (kind === "img") return <FileImageIcon size={size} />;
@@ -54,20 +57,20 @@ function ItemIcon({ kind, size = 22 }: { kind: Kind; size?: number }) {
 /** Halaman detail folder materi (file manager) */
 export default function MateriFolderPage() {
   const params = useParams<{ id: string }>();
-  const raw = Array.isArray(params?.id) ? params.id[0] : params?.id;
-  const folder = MATERI.find((m) => String(m.id) === raw) ?? MATERI[0];
+  const rawId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const folder = MATERI.find((m) => String(m.id) === rawId) ?? MATERI[0];
 
-  const [q, setQ] = useState("");
-  const [view, setView] = useState<"list" | "grid">("list");
+  const [query, setQuery] = useState("");
+  const [view, setView] = useState<ViewMode>("list");
 
   const list = useMemo(
-    () => ITEMS.filter((it) => it.name.toLowerCase().includes(q.trim().toLowerCase())),
-    [q]
+    () => ITEMS.filter((item) => item.name.toLowerCase().includes(query.trim().toLowerCase())),
+    [query]
   );
 
   return (
     <AppShell showSettings={false}>
-      <p className="date-line">Kamis, 9 September 2026 - Minggu 3</p>
+      <DateLine />
 
       <div className="crumb">
         <Link href="/materi">Materi</Link>
@@ -75,26 +78,29 @@ export default function MateriFolderPage() {
         <span className="cur">{folder.title}</span>
       </div>
 
-      <h2 className="page-title">
-        <FolderOpenIcon size={30} />
-        {folder.title}
-      </h2>
+      <PageTitle icon={<FolderOpenIcon size={24} />}>{folder.title}</PageTitle>
 
       <div className="card folder-head">
         <div className="ico">
-          <FolderOpenIcon size={34} />
+          <FolderOpenIcon size={28} />
         </div>
         <div className="meta">
           <p>{folder.dosen}</p>
-          <div className="chips">
-            <span className="chip sm">{folder.count} Berkas</span>
-            <span className="chip sm c-peach">3 Folder</span>
-            <span className="chip sm c-blue">Semester 1</span>
-            <span className="chip sm c-green">1.2 GB</span>
+          <div className="meta-chips">
+            <Chip small>{folder.count} Berkas</Chip>
+            <Chip small tone="peach">
+              3 Folder
+            </Chip>
+            <Chip small tone="blue">
+              Semester 1
+            </Chip>
+            <Chip small tone="green">
+              1.2 GB
+            </Chip>
           </div>
         </div>
         <div className="act-row">
-          <button className="btn-sm black">
+          <button className="btn btn-solid">
             <UploadIcon size={18} />
             Unggah Berkas
           </button>
@@ -103,19 +109,19 @@ export default function MateriFolderPage() {
 
       <div className="fm-toolbar">
         <label className="search">
-          <SearchIcon size={22} style={{ color: "#999" }} />
+          <SearchIcon size={20} />
           <input
             type="search"
             placeholder="Cari berkas di folder ini"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
           />
         </label>
 
         <div className="seg" role="group" aria-label="Tampilan daftar berkas">
           <button
             type="button"
-            className={view === "list" ? "on" : ""}
+            className={cx(view === "list" && "on")}
             aria-pressed={view === "list"}
             aria-label="Tampilan daftar"
             onClick={() => setView("list")}
@@ -124,7 +130,7 @@ export default function MateriFolderPage() {
           </button>
           <button
             type="button"
-            className={view === "grid" ? "on" : ""}
+            className={cx(view === "grid" && "on")}
             aria-pressed={view === "grid"}
             aria-label="Tampilan kisi"
             onClick={() => setView("grid")}
@@ -135,24 +141,24 @@ export default function MateriFolderPage() {
       </div>
 
       {list.length === 0 ? (
-        <p className="empty">Berkas tidak ditemukan.</p>
+        <p className="empty">Berkas tidak ditemukan</p>
       ) : view === "list" ? (
         <div className="card fm-card">
-          {list.map((it) => (
-            <div className="fm-row" key={it.id}>
-              <div className={`fm-ico ${it.kind}`}>
-                <ItemIcon kind={it.kind} />
+          {list.map((item) => (
+            <div className="fm-row" key={item.id}>
+              <div className={`fm-ico ${item.kind}`}>
+                <KindIcon kind={item.kind} />
               </div>
               <div className="nm">
-                <div className="t">{it.name}</div>
+                <div className="t">{item.name}</div>
                 <div className="sub">
-                  {LABEL[it.kind]} · {it.info} · Diubah {it.date}
+                  {KIND_LABEL[item.kind]} · {item.info} · Diubah {item.date}
                 </div>
               </div>
-              <button className="btn-ghost" aria-label={`Unduh ${it.name}`}>
+              <button className="btn-ghost" aria-label={`Unduh ${item.name}`}>
                 <DownloadIcon size={18} />
               </button>
-              <button className="btn-ghost" aria-label={`Aksi lain untuk ${it.name}`}>
+              <button className="btn-ghost" aria-label={`Aksi lain untuk ${item.name}`}>
                 <DotsIcon size={20} />
               </button>
             </div>
@@ -160,15 +166,15 @@ export default function MateriFolderPage() {
         </div>
       ) : (
         <div className="fm-grid">
-          {list.map((it) => (
-            <div className="card fm-tile" key={it.id}>
-              <div className={`fm-ico ${it.kind}`}>
-                <ItemIcon kind={it.kind} size={24} />
+          {list.map((item) => (
+            <div className="card fm-tile" key={item.id}>
+              <div className={`fm-ico ${item.kind}`}>
+                <KindIcon kind={item.kind} size={24} />
               </div>
               <div>
-                <div className="t">{it.name}</div>
+                <div className="t">{item.name}</div>
                 <div className="s">
-                  {LABEL[it.kind]} · {it.info}
+                  {KIND_LABEL[item.kind]} · {item.info}
                 </div>
               </div>
             </div>

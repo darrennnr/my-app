@@ -4,60 +4,27 @@ import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import AppShell from "../components/AppShell";
 import { BookIcon, CalendarIcon, ClockIcon, PinIcon } from "../components/icons";
+import { Chip, DateLine, PageTitle, SectionTitle } from "../components/ui";
+import { AGENDA, type CategoryTone, type TaskStatus } from "../lib/data";
+import { cx, pad2 } from "../lib/utils";
 
-type Ev = {
+/* ---------- Tipe ---------- */
+type ClassEvent = {
   id: string;
   day: number; // 0 = Senin
   name: string;
   start: number; // jam desimal
   end: number;
-  label: string;
   room: string;
-  color: "blue" | "peach" | "pink" | "green";
-  tugas?: "ok" | "bad";
+  tone: CategoryTone;
+  task?: TaskStatus;
 };
 
-const START_HOUR = 7;
-const MAX_END = 18;
-const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-const DAYS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
-
-const HH = 78;
-const TOP = 10;
-const TIME_COL = 56;
-const SNAP = 1 / 12; // 5 menit
-
-const snap5 = (t: number) => Math.round(t * 12) / 12;
-
-const formatTime = (t: number) => {
-  const total = Math.round(t * 60);
-  const h = Math.floor(total / 60);
-  const m = total % 60;
-  return `${String(h).padStart(2, "0")}.${String(m).padStart(2, "0")}`;
-};
-
-const EVENTS: Ev[] = [
-  { id: "e1", day: 0, name: "Matematika", start: 8, end: 9.67, label: "08.00 - 09.40", room: "D4 - B 205", color: "blue", tugas: "ok" },
-  { id: "e2", day: 0, name: "Sistem Digital", start: 10.5, end: 12.3, label: "10.30 - 12.10", room: "SAW - 10.08", color: "blue" },
-  { id: "e3", day: 0, name: "Konsep Teknologi", start: 13, end: 15, label: "08.00 - 09.40", room: "D4 - B 205", color: "blue", tugas: "ok" },
-  { id: "e4", day: 1, name: "Agama", start: 8, end: 9.67, label: "08.00 - 09.40", room: "SAW - 05.01", color: "peach" },
-  { id: "e5", day: 1, name: "Pancasila", start: 11.33, end: 13.83, label: "11.20 - 13.50", room: "SC - 02", color: "peach", tugas: "bad" },
-  { id: "e6", day: 1, name: "Praktikum Sistem Digital", start: 13.9, end: 15.5, label: "13.50 - 15.30", room: "JJ - 303", color: "peach", tugas: "ok" },
-  { id: "e7", day: 2, name: "Praktikum Allgoritma & Pemrogramman", start: 13, end: 14.67, label: "13.00 - 14.40", room: "SAW 04.06", color: "pink", tugas: "ok" },
-  { id: "e8", day: 2, name: "Praktikum Sistem Komunikasi", start: 14.75, end: 16.33, label: "14.40 - 16.20", room: "SAW 03.08", color: "pink", tugas: "bad" },
-  { id: "e9", day: 3, name: "Workshop teknologi web dan Aplikasi", start: 8.83, end: 11.4, label: "08.50 - 11.20", room: "SAW- 04.06", color: "green", tugas: "ok" },
-  { id: "e10", day: 3, name: "Algoritma dan Pemrogramman", start: 13.9, end: 15.6, label: "13.50 - 15.30", room: "A - 303", color: "green", tugas: "ok" },
-  { id: "e11", day: 3, name: "Sistem Komunikasi", start: 15.7, end: 17.4, label: "15.30 - 17.10", room: "SAW - 06.06", color: "green" },
-];
-
-const OTHERS = [
-  { title: "Agama", when: "Selasa, 14 September 2026 - 19.30 - 20.30", place: "Zoom ETHOL" },
-  { title: "Technical Meeting LKMM-Pra TD", when: "Jum’at, 18 September 2026 - 19.30 - 20.30", place: "PAS Lantai 6" },
-];
+type EventSeed = Omit<ClassEvent, "start" | "end"> & { time: string };
 
 type DragData = {
   id: string;
-  ev: Ev;
+  event: ClassEvent;
   pointerId: number;
   startX: number;
   startY: number;
@@ -76,13 +43,62 @@ type DragPreview = {
   start: number;
   end: number;
   moved: boolean;
-  colW: number;
+  colWidth: number;
 };
 
-/** Halaman 4 — Jadwal Minggu ini */
+/* ---------- Konstanta tata letak ---------- */
+const START_HOUR = 7;
+const MAX_END = 18;
+const HOURS = Array.from({ length: MAX_END - START_HOUR + 1 }, (_, i) => START_HOUR + i);
+const DAYS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
+
+const HOUR_HEIGHT = 64;
+const TOP_OFFSET = 10;
+const TIME_COL = 48;
+const SNAP_STEP = 1 / 12; // 5 menit
+const DRAG_THRESHOLD = 5;
+
+/* ---------- Helper waktu ---------- */
+const snapToFiveMinutes = (t: number) => Math.round(t * 12) / 12;
+
+/** "08.40" -> 8.667 */
+const parseClock = (value: string) => {
+  const [h, m] = value.split(".").map(Number);
+  return h + m / 60;
+};
+
+/** 8.667 -> "08.40" */
+const formatTime = (t: number) => {
+  const total = Math.round(t * 60);
+  return `${pad2(Math.floor(total / 60))}.${pad2(total % 60)}`;
+};
+
+const formatRange = (start: number, end: number) => `${formatTime(start)} - ${formatTime(end)}`;
+
+/* ---------- Data jadwal ---------- */
+const EVENT_SEEDS: EventSeed[] = [
+  { id: "e1", day: 0, name: "Matematika", time: "08.00 - 09.40", room: "D4 - B 205", tone: "blue", task: "ok" },
+  { id: "e2", day: 0, name: "Sistem Digital", time: "10.30 - 12.10", room: "SAW - 10.08", tone: "blue" },
+  { id: "e3", day: 0, name: "Konsep Teknologi", time: "13.00 - 15.00", room: "D4 - B 205", tone: "blue", task: "ok" },
+  { id: "e4", day: 1, name: "Agama", time: "08.00 - 09.40", room: "SAW - 05.01", tone: "peach" },
+  { id: "e5", day: 1, name: "Pancasila", time: "11.20 - 13.50", room: "SC - 02", tone: "peach", task: "bad" },
+  { id: "e6", day: 1, name: "Praktikum Sistem Digital", time: "13.50 - 15.30", room: "JJ - 303", tone: "peach", task: "ok" },
+  { id: "e7", day: 2, name: "Praktikum Allgoritma & Pemrogramman", time: "13.00 - 14.40", room: "SAW 04.06", tone: "pink", task: "ok" },
+  { id: "e8", day: 2, name: "Praktikum Sistem Komunikasi", time: "14.40 - 16.20", room: "SAW 03.08", tone: "pink", task: "bad" },
+  { id: "e9", day: 3, name: "Workshop teknologi web dan Aplikasi", time: "08.50 - 11.20", room: "SAW- 04.06", tone: "green", task: "ok" },
+  { id: "e10", day: 3, name: "Algoritma dan Pemrogramman", time: "13.50 - 15.30", room: "A - 303", tone: "green", task: "ok" },
+  { id: "e11", day: 3, name: "Sistem Komunikasi", time: "15.30 - 17.10", room: "SAW - 06.06", tone: "green" },
+];
+
+const EVENTS: ClassEvent[] = EVENT_SEEDS.map(({ time, ...rest }) => {
+  const [start, end] = time.split(" - ");
+  return { ...rest, start: parseClock(start), end: parseClock(end) };
+});
+
+/** Halaman 4: Jadwal minggu ini */
 export default function JadwalPage() {
-  const [events, setEvents] = useState<Ev[]>(() => EVENTS.map((e) => ({ ...e })));
-  const [sel, setSel] = useState<Ev | null>(null);
+  const [events, setEvents] = useState<ClassEvent[]>(EVENTS);
+  const [selected, setSelected] = useState<ClassEvent | null>(null);
   const [drag, setDrag] = useState<DragPreview | null>(null);
 
   const dragRef = useRef<DragData | null>(null);
@@ -101,109 +117,93 @@ export default function JadwalPage() {
     };
   }, []);
 
-  const onPointerDown = (e: ReactPointerEvent<HTMLButtonElement>, ev: Ev) => {
+  const handlePointerDown = (e: ReactPointerEvent<HTMLButtonElement>, event: ClassEvent) => {
     if (dragRef.current) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
 
     e.preventDefault();
 
-    const body = bodyRef.current;
-    const rect = body?.getBoundingClientRect();
-    const colW = rect ? (rect.width - TIME_COL) / DAYS.length : 0;
+    const rect = bodyRef.current?.getBoundingClientRect();
+    const colWidth = rect ? (rect.width - TIME_COL) / DAYS.length : 0;
 
-    const d: DragData = {
-      id: ev.id,
-      ev,
+    dragRef.current = {
+      id: event.id,
+      event,
       pointerId: e.pointerId,
       startX: e.clientX,
       startY: e.clientY,
-      origDay: ev.day,
-      origStart: ev.start,
-      duration: ev.end - ev.start,
+      origDay: event.day,
+      origStart: event.start,
+      duration: event.end - event.start,
       moved: false,
-      day: ev.day,
-      start: ev.start,
-      end: ev.end,
+      day: event.day,
+      start: event.start,
+      end: event.end,
     };
 
-    dragRef.current = d;
+    setDrag({ id: event.id, day: event.day, start: event.start, end: event.end, moved: false, colWidth });
 
-    setDrag({
-      id: ev.id,
-      day: ev.day,
-      start: ev.start,
-      end: ev.end,
-      moved: false,
-      colW,
-    });
-
-    const onMove = (event: PointerEvent) => {
+    const onMove = (pe: PointerEvent) => {
       const cur = dragRef.current;
-      if (!cur || event.pointerId !== cur.pointerId) return;
+      if (!cur || pe.pointerId !== cur.pointerId) return;
 
-      const dx = event.clientX - cur.startX;
-      const dy = event.clientY - cur.startY;
+      const dx = pe.clientX - cur.startX;
+      const dy = pe.clientY - cur.startY;
 
       if (!cur.moved) {
-        if (Math.hypot(dx, dy) < 5) return;
+        if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
         cur.moved = true;
       }
 
-      event.preventDefault();
+      pe.preventDefault();
 
       const bodyEl = bodyRef.current;
       if (!bodyEl) return;
 
       const r = bodyEl.getBoundingClientRect();
-      const w = (r.width - TIME_COL) / DAYS.length;
-      if (w <= 0) return;
+      const width = (r.width - TIME_COL) / DAYS.length;
+      if (width <= 0) return;
 
-      const day = Math.max(0, Math.min(DAYS.length - 1, cur.origDay + Math.round(dx / w)));
-      const dur = Math.min(cur.duration, MAX_END - START_HOUR);
+      const day = Math.max(0, Math.min(DAYS.length - 1, cur.origDay + Math.round(dx / width)));
+      const duration = Math.min(cur.duration, MAX_END - START_HOUR);
 
-      let start = snap5(cur.origStart + dy / HH);
-      start = Math.max(START_HOUR, Math.min(MAX_END - dur, start));
+      let start = snapToFiveMinutes(cur.origStart + dy / HOUR_HEIGHT);
+      start = Math.max(START_HOUR, Math.min(MAX_END - duration, start));
 
-      let end = snap5(start + dur);
+      let end = snapToFiveMinutes(start + duration);
       if (end > MAX_END) {
         end = MAX_END;
-        start = snap5(end - dur);
+        start = snapToFiveMinutes(end - duration);
       }
-      if (end <= start) end = start + SNAP;
+      if (end <= start) end = start + SNAP_STEP;
 
       cur.day = day;
       cur.start = start;
       cur.end = end;
 
-      setDrag({ id: cur.id, day, start, end, moved: true, colW: w });
+      setDrag({ id: cur.id, day, start, end, moved: true, colWidth: width });
     };
 
-    const finish = (event: PointerEvent) => {
+    const finish = (pe: PointerEvent) => {
       const cur = dragRef.current;
-      if (!cur || event.pointerId !== cur.pointerId) return;
+      if (!cur || pe.pointerId !== cur.pointerId) return;
 
       dragRef.current = null;
       endDragListeners();
 
       if (cur.moved) {
         const { id, day, start, end } = cur;
-        setEvents((prev) =>
-          prev.map((item) =>
-            item.id === id
-              ? { ...item, day, start, end, label: `${formatTime(start)} - ${formatTime(end)}` }
-              : item
-          )
-        );
+        setEvents((prev) => prev.map((item) => (item.id === id ? { ...item, day, start, end } : item)));
       } else {
-        setSel(cur.ev);
+        setSelected(cur.event);
       }
 
       setDrag(null);
     };
 
-    const cancel = (event: PointerEvent) => {
+    const cancel = (pe: PointerEvent) => {
       const cur = dragRef.current;
-      if (!cur || event.pointerId !== cur.pointerId) return;
+      if (!cur || pe.pointerId !== cur.pointerId) return;
 
       dragRef.current = null;
       endDragListeners();
@@ -221,15 +221,14 @@ export default function JadwalPage() {
     window.addEventListener("pointercancel", cancel);
   };
 
+  const isDragging = Boolean(drag && drag.moved);
+
   return (
     <AppShell>
-      <p className="date-line">Kamis, 9 September 2026 - Minggu 3</p>
+      <DateLine />
 
-      <div className="jadwal-head">
-        <h2 className="page-title">
-          <CalendarIcon size={30} />
-          Jadwal Minggu ini
-        </h2>
+      <div className="page-bar">
+        <PageTitle icon={<CalendarIcon size={24} />}>Jadwal minggu ini</PageTitle>
         <span className="hint">Klik untuk detail, drag untuk memindahkan</span>
       </div>
 
@@ -239,65 +238,57 @@ export default function JadwalPage() {
             <span style={{ display: "grid", placeItems: "center" }}>
               <ClockIcon size={22} />
             </span>
-            {DAYS.map((d) => (
-              <span key={d}>{d}</span>
+            {DAYS.map((day) => (
+              <span key={day}>{day}</span>
             ))}
           </div>
 
-          <div ref={bodyRef} className={`tt-body${drag && drag.moved ? " is-dragging" : ""}`}>
-            {drag && drag.moved && (
+          <div ref={bodyRef} className={cx("tt-body", isDragging && "is-dragging")}>
+            {isDragging && (
               <div className="snap-layer" aria-hidden="true">
-                {Array.from({ length: (MAX_END - START_HOUR) * 2 + 1 }).map((_, i) => {
-                  const t = START_HOUR + i * 0.5;
-                  return (
-                    <span
-                      key={i}
-                      className={i % 2 === 0 ? "snap-line" : "snap-line half"}
-                      style={{ top: TOP + (t - START_HOUR) * HH }}
-                    />
-                  );
-                })}
+                {Array.from({ length: (MAX_END - START_HOUR) * 2 + 1 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className={cx("snap-line", i % 2 === 1 && "half")}
+                    style={{ top: TOP_OFFSET + i * 0.5 * HOUR_HEIGHT }}
+                  />
+                ))}
               </div>
             )}
 
             <div className="tt-times">
               {HOURS.map((h) => (
-                <span key={h} style={{ top: TOP + (h - START_HOUR) * HH }}>
-                  {String(h).padStart(2, "0")}.00
+                <span key={h} style={{ top: TOP_OFFSET + (h - START_HOUR) * HOUR_HEIGHT }}>
+                  {pad2(h)}.00
                 </span>
               ))}
             </div>
 
-            {DAYS.map((_, di) => (
-              <div
-                className={`tt-col${drag && drag.moved && drag.day === di ? " drop-target" : ""}`}
-                key={di}
-              >
+            {DAYS.map((day, dayIndex) => (
+              <div key={day} className={cx("tt-col", isDragging && drag?.day === dayIndex && "drop-target")}>
                 {events
-                  .filter((e) => e.day === di)
+                  .filter((e) => e.day === dayIndex)
                   .map((e) => {
                     const dragging = drag && drag.id === e.id && drag.moved ? drag : null;
-                    const dx = dragging ? (dragging.day - e.day) * dragging.colW : 0;
-                    const dy = dragging ? (dragging.start - e.start) * HH : 0;
-                    const label = dragging
-                      ? `${formatTime(dragging.start)} - ${formatTime(dragging.end)}`
-                      : e.label;
+                    const dx = dragging ? (dragging.day - e.day) * dragging.colWidth : 0;
+                    const dy = dragging ? (dragging.start - e.start) * HOUR_HEIGHT : 0;
+                    const label = dragging ? formatRange(dragging.start, dragging.end) : formatRange(e.start, e.end);
 
                     return (
                       <button
                         type="button"
                         key={e.id}
-                        className={`ev c-${e.color}${dragging ? " dragging" : ""}`}
+                        className={cx("ev", `c-${e.tone}`, dragging && "dragging")}
                         style={{
-                          top: TOP + (e.start - START_HOUR) * HH,
-                          height: (e.end - e.start) * HH,
+                          top: TOP_OFFSET + (e.start - START_HOUR) * HOUR_HEIGHT,
+                          height: (e.end - e.start) * HOUR_HEIGHT,
                           transform: dragging ? `translate(${dx}px, ${dy}px)` : undefined,
                         }}
-                        onPointerDown={(evt) => onPointerDown(evt, e)}
+                        onPointerDown={(evt) => handlePointerDown(evt, e)}
                         onKeyDown={(evt) => {
                           if (evt.key === "Enter" || evt.key === " ") {
                             evt.preventDefault();
-                            setSel(e);
+                            setSelected(e);
                           }
                         }}
                       >
@@ -307,15 +298,10 @@ export default function JadwalPage() {
                           <div>{e.room}</div>
                           <div>Luring</div>
                         </div>
-                        {e.tugas && (
+                        {e.task && (
                           <div className="tug">
                             <span>1 Tugas</span>
-                            <i
-                              style={{
-                                background:
-                                  e.tugas === "ok" ? "var(--ok-light)" : "var(--bad-light)",
-                              }}
-                            />
+                            <i className={cx("dot", e.task)} />
                           </div>
                         )}
                       </button>
@@ -327,30 +313,41 @@ export default function JadwalPage() {
         </div>
       </div>
 
-      <h3 className="section-title">Agenda Lainnya</h3>
-      {OTHERS.map((o) => (
-        <div key={o.title} className="card other-card">
-          <div><BookIcon size={16} />{o.title}</div>
-          <div><ClockIcon size={16} />{o.when}</div>
-          <div><PinIcon size={16} />{o.place}</div>
+      <SectionTitle>Agenda lainnya</SectionTitle>
+      {AGENDA.map((a) => (
+        <div key={a.id} className="card agenda-card">
+          <div className="meta-row title">
+            <BookIcon size={16} />
+            {a.title}
+          </div>
+          <div className="meta-row">
+            <ClockIcon size={16} />
+            {a.when}
+          </div>
+          <div className="meta-row">
+            <PinIcon size={16} />
+            {a.place}
+          </div>
         </div>
       ))}
 
-      {sel && (
-        <div className="modal-bg" onClick={() => setSel(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>{sel.name}</h3>
-            <div className="row"><ClockIcon size={20} />{sel.label}</div>
-            <div className="row"><PinIcon size={20} />{sel.room}</div>
-            <div className="row">
-              <span className="chip">Luring</span>
-              {sel.tugas && <span className="chip">1 Tugas</span>}
+      {selected && (
+        <div className="modal-bg" onClick={() => setSelected(null)}>
+          <div className="modal" role="dialog" aria-modal="true" aria-label={selected.name} onClick={(e) => e.stopPropagation()}>
+            <h3>{selected.name}</h3>
+            <div className="meta-row">
+              <ClockIcon size={20} />
+              {formatRange(selected.start, selected.end)}
             </div>
-            <button
-              className="btn-black"
-              style={{ height: 52, fontSize: 18, padding: 0 }}
-              onClick={() => setSel(null)}
-            >
+            <div className="meta-row">
+              <PinIcon size={20} />
+              {selected.room}
+            </div>
+            <div className="meta-row">
+              <Chip>Luring</Chip>
+              {selected.task && <Chip>1 Tugas</Chip>}
+            </div>
+            <button className="btn btn-solid btn-block" onClick={() => setSelected(null)}>
               Tutup
             </button>
           </div>

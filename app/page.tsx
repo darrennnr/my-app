@@ -1,24 +1,23 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Blob, CapIcon } from "./components/icons";
+import { useEffect } from "react";
+import { BrandMark } from "./components/ui";
 
-/** Halaman 1 — Splash screen, otomatis menuju /login */
+const SPLASH_DURATION_MS = 2200;
+
+/** Halaman 1: Splash screen, otomatis menuju /login */
 export default function SplashPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const t = setTimeout(() => router.replace("/login"), 2200);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => router.replace("/login"), SPLASH_DURATION_MS);
+    return () => clearTimeout(timer);
   }, [router]);
 
   return (
     <div className="center-screen">
-      <div className="blob">
-        <Blob className="bg" />
-        <CapIcon className="cap" size={120} style={{ width: "42%", height: "auto" }} />
-      </div>
+      <BrandMark />
     </div>
   );
 }

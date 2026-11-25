@@ -1,90 +1,274 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import AppShell from "../components/AppShell";
-import { ClockIcon, DotsIcon, InfoIcon } from "../components/icons";
+import {
+  BookIcon,
+  CalendarIcon,
+  CheckIcon,
+  ClockIcon,
+  DotsIcon,
+  FolderOpenIcon,
+  MegaphoneIcon,
+  TasksIcon,
+  WalletIcon,
+} from "../components/icons";
+import { Chip, Money, Pill, ProgressBar, SectionTitle, StatCard, StatGrid, StatusPill } from "../components/ui";
+import { ANNOUNCEMENTS, CAT_COLOR, relativeDay, sortNewest } from "../lib/announcements";
+import {
+  ACADEMIC_STATS,
+  AGENDA,
+  DATE_LINE,
+  MATERI,
+  STUDENT_NICKNAME,
+  TASKS,
+  TODAY_CLASSES,
+} from "../lib/data";
+import { createInitialPaid, summarizeKas } from "../lib/kas";
+import { formatRupiah, pad2 } from "../lib/utils";
 
-const TODAY = [
-  {
-    title: "Praktikum Algoritma dan Pemrogramman (SAW - 04.06)",
-    time: "09.00 - 11.00",
-    dosen: "Afifah Dwi Ramadhani, S.ST., M.TR.T",
-    mode: "Luring",
-  },
-  {
-    title: "Workshop Teknologi Web dan Aplikasi (SAW - 10.06)",
-    time: "13.00 - 15.00",
-    dosen: "A. Fauzi Makarim, M. TR.KOM.",
-    mode: "Daring",
-  },
-];
+/* ---------- Data turunan (dihitung sekali dari sumber yang sama dengan halaman asal) ---------- */
+const kas = summarizeKas(createInitialPaid());
 
-/** Halaman 3 — Dashboard */
+const tasksDone = TASKS.filter((t) => t.status === "ok").length;
+const tasksTotal = TASKS.length;
+const tasksPercent = Math.round((tasksDone / tasksTotal) * 100);
+const upcomingTasks = TASKS.filter((t) => t.status === "bad").slice(0, 3);
+
+const unreadAnnouncements = ANNOUNCEMENTS.filter((a) => !a.read);
+const latestAnnouncements = [...unreadAnnouncements].sort(sortNewest).slice(0, 3);
+
+const latestMateri = MATERI.slice(0, 3);
+const academicStats = ACADEMIC_STATS.slice(0, 3);
+
+/** Halaman 3: Dashboard */
 export default function DashboardPage() {
   const [note, setNote] = useState("");
 
   return (
     <AppShell>
-      <h2 className="greet">Halo, Darren!</h2>
-      <p className="greet-sub">Kamis, 9 September 2026 - Minggu 3</p>
-      <p className="greet-sub2">5 Minggu lagi menuju UTS</p>
+      <div className="dash-head">
+        <h2 className="greet">Halo, {STUDENT_NICKNAME}</h2>
+        <p className="greet-sub">{DATE_LINE}</p>
+        <span className="countdown">
+          <ClockIcon size={14} />5 minggu lagi menuju UTS
+        </span>
+      </div>
+
+      {/* Ringkasan cepat */}
+      <StatGrid>
+        <StatCard
+          label="Tugas Selesai"
+          accessory={
+            <span className="ico tone-ok">
+              <CheckIcon size={18} />
+            </span>
+          }
+          value={
+            <>
+              {pad2(tasksDone)}
+              <small>/{tasksTotal}</small>
+            </>
+          }
+        />
+        <StatCard
+          label="Belum Dibaca"
+          accessory={
+            <span className="ico tone-bad">
+              <MegaphoneIcon size={18} />
+            </span>
+          }
+          value={pad2(unreadAnnouncements.length)}
+        />
+        <StatCard
+          label="Saldo Kas"
+          accessory={
+            <span className="ico tone-accent">
+              <WalletIcon size={18} />
+            </span>
+          }
+          value={<Money value={kas.saldo} />}
+        />
+        <StatCard
+          label="Kuliah Hari Ini"
+          accessory={
+            <span className="ico tone-warn">
+              <BookIcon size={18} />
+            </span>
+          }
+          value={pad2(TODAY_CLASSES.length)}
+        />
+      </StatGrid>
 
       <div className="dash-grid">
         <section>
-          <h3 className="section-title">Jadwal Hari ini</h3>
+          {/* Jadwal hari ini */}
+          <SectionTitle first href="/jadwal">
+            Jadwal hari ini
+          </SectionTitle>
           <div className="sched-row">
-            {TODAY.map((s) => (
-              <article key={s.title} className="card sched-card">
-                <h3>{s.title}</h3>
+            {TODAY_CLASSES.map((c) => (
+              <article key={c.title} className="card sched-card">
+                <span className={`sched-tag ${c.tone}`} />
+                <h3>{c.title}</h3>
                 <div className="time">
-                  <ClockIcon size={22} />
-                  <span>{s.time}</span>
+                  <ClockIcon size={16} />
+                  <span>{c.time}</span>
                 </div>
-                <p className="dosen">{s.dosen}</p>
+                <p className="dosen">{c.dosen}</p>
                 <div className="foot">
-                  <span className="chip">{s.mode}</span>
-                  <button aria-label="Detail jadwal">
-                    <InfoIcon size={24} />
-                  </button>
+                  <Chip small>{c.mode}</Chip>
+                  <span className="muted" style={{ fontSize: "var(--fs-xs)" }}>
+                    {c.room}
+                  </span>
                 </div>
               </article>
             ))}
           </div>
 
-          <h3 className="section-title" style={{ marginTop: 28 }}>Tugas</h3>
-          <div className="stat-grid">
-            <div className="card stat">
-              <div className="top">
-                <span>Selesai</span>
-                <i className="dot ok" />
-              </div>
-              <div className="num">04</div>
-            </div>
-            <div className="card stat">
-              <div className="top">
-                <span>Belum Selesai</span>
-                <i className="dot bad" />
-              </div>
-              <div className="num">02</div>
+          {/* Tugas mendatang */}
+          <SectionTitle href="/tugas">Tugas mendatang</SectionTitle>
+          <div className="card card-inset">
+            <div className="mini-list">
+              {upcomingTasks.map((t) => (
+                <Link key={t.id} href={`/tugas/${t.id}`} className="mini-row">
+                  <span className="ico tone-accent">
+                    <TasksIcon size={18} />
+                  </span>
+                  <span className="info">
+                    <span className="t">{t.title}</span>
+                    <span className="m">{t.due}</span>
+                  </span>
+                  <StatusPill status={t.status} small />
+                </Link>
+              ))}
             </div>
           </div>
+
+          {/* Progres tugas */}
+          <SectionTitle>Progres tugas</SectionTitle>
+          <div className="card progress-card">
+            <div className="progress-head">
+              <span>
+                {tasksDone} dari {tasksTotal} tugas selesai
+              </span>
+              <strong>{tasksPercent}%</strong>
+            </div>
+            <ProgressBar value={tasksPercent} tone="ok" label="Progres tugas" />
+          </div>
+
+          {/* Materi terbaru */}
+          <SectionTitle href="/materi">Materi terbaru</SectionTitle>
+          <div className="card card-inset">
+            <div className="mini-list">
+              {latestMateri.map((m) => (
+                <Link key={m.id} href={`/materi/${m.id}`} className="mini-row">
+                  <span className="ico tone-accent">
+                    <FolderOpenIcon size={18} />
+                  </span>
+                  <span className="info">
+                    <span className="t">{m.title}</span>
+                    <span className="m">{m.dosen}</span>
+                  </span>
+                  <span className="end">{m.count} materi</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Ringkasan akademik */}
+          <SectionTitle href="/profil" linkLabel="Profil">
+            Ringkasan akademik
+          </SectionTitle>
+          <StatGrid cols={3}>
+            {academicStats.map((s) => (
+              <StatCard key={s.label} label={s.label} value={s.value} />
+            ))}
+          </StatGrid>
         </section>
 
-        <section className="dash-right">
+        <section>
+          {/* Ringkasan kas */}
+          <SectionTitle first href="/kas" linkLabel="Detail">
+            Ringkasan kas
+          </SectionTitle>
+          <StatGrid cols={2}>
+            <StatCard label="Pemasukan" accessory={<i className="dot ok" />} value={<Money value={kas.pemasukan} />} />
+            <StatCard label="Pengeluaran" accessory={<i className="dot bad" />} value={<Money value={kas.pengeluaran} />} />
+          </StatGrid>
+          <div className="card progress-card" style={{ marginTop: "calc(-1 * var(--sp-2))" }}>
+            <div className="progress-head">
+              <span>Iuran terkumpul</span>
+              <strong>{kas.persen}%</strong>
+            </div>
+            <ProgressBar value={kas.persen} label="Iuran terkumpul" />
+            <div className="progress-foot">
+              <span>
+                {formatRupiah(kas.totalIuran)} dari {formatRupiah(kas.target)}
+              </span>
+              <span>{kas.menunggak} menunggak</span>
+            </div>
+          </div>
+
+          {/* Pengumuman terbaru */}
+          <SectionTitle href="/pengumuman">Pengumuman terbaru</SectionTitle>
+          <div className="card card-inset">
+            <div className="mini-list">
+              {latestAnnouncements.map((a) => (
+                <Link key={a.id} href="/pengumuman" className="mini-row">
+                  <span className={`ico c-${CAT_COLOR[a.cat]}`}>
+                    <MegaphoneIcon size={18} />
+                  </span>
+                  <span className="info">
+                    <span className="t">{a.title}</span>
+                    <span className="m">
+                      {a.cat} · {relativeDay(a.day)}
+                    </span>
+                  </span>
+                  {a.important && (
+                    <Pill tone="bad" small>
+                      Penting
+                    </Pill>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Agenda mendatang */}
+          <SectionTitle href="/jadwal">Agenda mendatang</SectionTitle>
+          <div className="card card-inset">
+            <div className="mini-list">
+              {AGENDA.map((a) => (
+                <div key={a.id} className="mini-row">
+                  <span className="ico tone-warn">
+                    <CalendarIcon size={18} />
+                  </span>
+                  <span className="info">
+                    <span className="t">{a.title}</span>
+                    <span className="m">{a.when}</span>
+                  </span>
+                  <span className="end">{a.place}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Catatan */}
           <div className="card notes">
             <div className="head">
-              <span>Catatan</span>
-              <button aria-label="Menu catatan">
-                <DotsIcon size={30} />
+              <span className="lbl">Catatan</span>
+              <button className="btn-ghost" aria-label="Menu catatan">
+                <DotsIcon size={18} />
               </button>
             </div>
-            <div className="notes-body">
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                aria-label="Catatan"
-              />
-            </div>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              aria-label="Catatan"
+              placeholder="Tulis catatan singkat"
+            />
           </div>
         </section>
       </div>
