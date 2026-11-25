@@ -14,10 +14,11 @@ import {
   TrashIcon,
 } from "../components/icons";
 import { Chip, DateLine, PageTitle, StatusPill } from "../components/ui";
-import type { CategoryTone, Materi, Task, TaskStatus, TaskWeek } from "../lib/data";
+import { LECTURERS, TASKS, type CategoryTone, type Materi, type Task, type TaskStatus, type TaskWeek } from "../lib/data";
 import {
   DAYS,
   MAX_END,
+  SCHEDULE_SEED,
   START_HOUR,
   formatRange,
   formatTime,
@@ -45,6 +46,28 @@ const TONES: { value: CategoryTone; label: string }[] = [
   { value: "pink", label: "Merah muda" },
   { value: "green", label: "Hijau" },
 ];
+
+const uniqueOptions = (...lists: (string | undefined)[][]) => {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const list of lists) {
+    for (const raw of list) {
+      const val = raw?.trim();
+      if (val && !seen.has(val)) {
+        seen.add(val);
+        out.push(val);
+      }
+    }
+  }
+  return out;
+};
+
+const BASE_COURSES = uniqueOptions(
+  TASKS.map((t) => t.course),
+  SCHEDULE_SEED.map((s) => s.name)
+);
+
+const BASE_LECTURERS = uniqueOptions(Object.values(LECTURERS));
 
 type Errors<T> = Partial<Record<keyof T, string>>;
 
@@ -219,6 +242,7 @@ const fromInputTime = (v: string) => (v ? parseClock(v.replace(":", ".")) : NaN)
 
 function ScheduleForm({ item, onClose, onDone }: FormProps<ScheduleEvent>) {
   const events = useSchedule();
+  const courseOptions = uniqueOptions(BASE_COURSES, events.map((e) => e.name), [item?.name]);
   const [draft, field] = useDraft<ScheduleDraft>({
     name: item?.name ?? "",
     day: String(item?.day ?? 0),
@@ -238,7 +262,7 @@ function ScheduleForm({ item, onClose, onDone }: FormProps<ScheduleEvent>) {
     const start = fromInputTime(draft.start);
     const end = fromInputTime(draft.end);
 
-    if (!draft.name.trim()) found.name = "Nama mata kuliah wajib diisi";
+    if (!draft.name.trim()) found.name = "Mata kuliah wajib dipilih";
     if (!draft.room.trim()) found.room = "Ruang wajib diisi";
 
     if (Number.isNaN(start)) found.start = "Jam mulai wajib diisi";
@@ -273,7 +297,14 @@ function ScheduleForm({ item, onClose, onDone }: FormProps<ScheduleEvent>) {
   return (
     <FormModal title={item ? "Ubah jadwal" : "Tambah jadwal"} submitLabel={item ? "Simpan" : "Tambah"} onClose={onClose} onSubmit={submit}>
       <Field name="name" label="Mata kuliah" error={errors.name} wide>
-        <input className="input" autoFocus placeholder="Contoh: Matematika" {...field("name", errors.name)} />
+        <select className="input" autoFocus {...field("name", errors.name)}>
+          <option value="">Pilih mata kuliah</option>
+          {courseOptions.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
       </Field>
       <Field name="day" label="Hari">
         <select className="input" {...field("day")}>
@@ -334,6 +365,20 @@ type TaskDraft = {
 
 function TaskForm({ item, onClose, onDone }: FormProps<Task>) {
   const tasks = useTasks();
+  const schedule = useSchedule();
+  const materi = useMateri();
+  const courseOptions = uniqueOptions(
+    BASE_COURSES,
+    schedule.map((e) => e.name),
+    tasks.map((t) => t.course),
+    [item?.course]
+  );
+  const dosenOptions = uniqueOptions(
+    BASE_LECTURERS,
+    tasks.map((t) => t.dosen),
+    materi.map((m) => m.dosen),
+    [item?.dosen]
+  );
   const [draft, field] = useDraft<TaskDraft>({
     title: item?.title ?? "",
     course: item?.course ?? "",
@@ -351,8 +396,8 @@ function TaskForm({ item, onClose, onDone }: FormProps<Task>) {
     e.preventDefault();
     const found: Errors<TaskDraft> = {};
     if (!draft.title.trim()) found.title = "Judul tugas wajib diisi";
-    if (!draft.course.trim()) found.course = "Mata kuliah wajib diisi";
-    if (!draft.dosen.trim()) found.dosen = "Dosen wajib diisi";
+    if (!draft.course.trim()) found.course = "Mata kuliah wajib dipilih";
+    if (!draft.dosen.trim()) found.dosen = "Dosen wajib dipilih";
     if (!draft.opened.trim()) found.opened = "Tanggal dibuka wajib diisi";
     if (!draft.due.trim()) found.due = "Batas pengumpulan wajib diisi";
     if (!/^-?\d+$/.test(draft.daysLeft.trim())) found.daysLeft = "Isi dengan bilangan bulat";
@@ -381,10 +426,24 @@ function TaskForm({ item, onClose, onDone }: FormProps<Task>) {
         <input className="input" autoFocus placeholder="Contoh: Latihan 1 - 5 Modul Matriks" {...field("title", errors.title)} />
       </Field>
       <Field name="course" label="Mata kuliah" error={errors.course}>
-        <input className="input" {...field("course", errors.course)} />
+        <select className="input" {...field("course", errors.course)}>
+          <option value="">Pilih mata kuliah</option>
+          {courseOptions.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
       </Field>
       <Field name="dosen" label="Dosen" error={errors.dosen}>
-        <input className="input" {...field("dosen", errors.dosen)} />
+        <select className="input" {...field("dosen", errors.dosen)}>
+          <option value="">Pilih dosen</option>
+          {dosenOptions.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
       </Field>
       <Field name="opened" label="Dibuka" error={errors.opened} hint="Contoh: 9 September 2026">
         <input className="input" {...field("opened", errors.opened)} />
@@ -419,6 +478,13 @@ type MateriDraft = { title: string; dosen: string; count: string };
 
 function MateriForm({ item, onClose, onDone }: FormProps<Materi>) {
   const materi = useMateri();
+  const tasks = useTasks();
+  const dosenOptions = uniqueOptions(
+    BASE_LECTURERS,
+    tasks.map((t) => t.dosen),
+    materi.map((m) => m.dosen),
+    [item?.dosen]
+  );
   const [draft, field] = useDraft<MateriDraft>({
     title: item?.title ?? "",
     dosen: item?.dosen ?? "",
@@ -430,7 +496,7 @@ function MateriForm({ item, onClose, onDone }: FormProps<Materi>) {
     e.preventDefault();
     const found: Errors<MateriDraft> = {};
     if (!draft.title.trim()) found.title = "Judul materi wajib diisi";
-    if (!draft.dosen.trim()) found.dosen = "Dosen wajib diisi";
+    if (!draft.dosen.trim()) found.dosen = "Dosen wajib dipilih";
     if (!/^\d+$/.test(draft.count.trim())) found.count = "Isi dengan bilangan bulat 0 atau lebih";
 
     setErrors(found);
@@ -451,7 +517,14 @@ function MateriForm({ item, onClose, onDone }: FormProps<Materi>) {
         <input className="input" autoFocus placeholder="Contoh: Matematika - 12" {...field("title", errors.title)} />
       </Field>
       <Field name="dosen" label="Dosen" error={errors.dosen}>
-        <input className="input" {...field("dosen", errors.dosen)} />
+        <select className="input" {...field("dosen", errors.dosen)}>
+          <option value="">Pilih dosen</option>
+          {dosenOptions.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
       </Field>
       <Field name="count" label="Jumlah materi" error={errors.count}>
         <input className="input" inputMode="numeric" {...field("count", errors.count)} />

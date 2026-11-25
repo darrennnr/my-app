@@ -57,8 +57,7 @@ export default function ProfilPage() {
           </Link>
         </div>
       </div>
-
-
+      
       <div className="prof-grid">
         {/* Data mahasiswa */}
         <div className="card prof-card">

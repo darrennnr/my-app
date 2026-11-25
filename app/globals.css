@@ -773,7 +773,7 @@ a.mini-row:hover { background: var(--surface-2); }
 @media (max-width: 520px) { .prof-hero { gap: var(--sp-3); } .prof-hero .act-row { width: 100%; } }
 
 .prof-hero + .stat-grid { margin: var(--sp-4) 0; }
-.prof-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-4); align-items: start; }
+.prof-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-4); align-items: start; margin-top: var(--sp-4); }
 @media (min-width: 940px) { .prof-grid { grid-template-columns: 1.15fr 1fr; } }
 .prof-col { display: grid; gap: var(--sp-4); align-content: start; min-width: 0; }
 .prof-card { padding: var(--sp-4); }
@@ -857,6 +857,20 @@ a.mini-row:hover { background: var(--surface-2); }
 .input:focus { border-color: var(--accent); background: var(--card); box-shadow: 0 0 0 3px var(--accent-soft); }
 .input:disabled { color: var(--muted); cursor: not-allowed; }
 .input[aria-invalid="true"] { border-color: var(--bad); }
+select.input {
+  appearance: none;
+  padding-right: 40px;
+  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+}
+select.input:has(option[value=""]:checked) { color: var(--muted); }
+select.input option { color: var(--ink); background: var(--card); }
 .field-hint { font-size: var(--fs-xs); color: var(--muted); }
 .field-error { font-size: var(--fs-xs); font-weight: 500; color: var(--bad-ink); }
 .form-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-5); }
