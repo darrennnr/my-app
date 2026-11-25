@@ -20,13 +20,13 @@ import {
 import { useNotifications } from "./Providers";
 
 const NAV = [
-  { href: "/dashboard", label: "Beranda", Icon: HomeIcon },
-  { href: "/jadwal", label: "Jadwal", Icon: CalendarIcon },
-  { href: "/tugas", label: "Tugas", Icon: TasksIcon },
-  { href: "/materi", label: "Materi", Icon: DocIcon },
-  { href: "/kas", label: "Kas", Icon: WalletIcon },
-  { href: "/pengumuman", label: "Pengumuman", Icon: MegaphoneIcon },
-  { href: "/profil", label: "Profil", Icon: UserIcon },
+  { href: "/dashboard", label: "Beranda", Icon: HomeIcon, color: "c-blue" },
+  { href: "/jadwal", label: "Jadwal", Icon: CalendarIcon, color: "c-green" },
+  { href: "/tugas", label: "Tugas", Icon: TasksIcon, color: "c-peach" },
+  { href: "/materi", label: "Materi", Icon: DocIcon, color: "c-purple" },
+  { href: "/kas", label: "Kas", Icon: WalletIcon, color: "c-teal" },
+  { href: "/pengumuman", label: "Pengumuman", Icon: MegaphoneIcon, color: "c-pink" },
+  { href: "/profil", label: "Profil", Icon: UserIcon, color: "c-indigo" },
 ];
 
 type AppShellProps = {
@@ -78,14 +78,14 @@ export default function AppShell({ children, showSettings = true }: AppShellProp
 
       <div className="layout">
         <nav className="nav" aria-label="Navigasi utama">
-          {NAV.map(({ href, label, Icon }) => (
+          {NAV.map(({ href, label, Icon, color }) => (
             <Link
               key={href}
               href={href}
               aria-label={label}
               aria-current={isActive(href) ? "page" : undefined}
               title={label}
-              className={cx(isActive(href) && "active")}
+              className={cx(isActive(href) && `active ${color}`)}
             >
               <Icon size={22} />
             </Link>
