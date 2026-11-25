@@ -16,7 +16,8 @@ import {
   UploadIcon,
 } from "../../components/icons";
 import { Chip, DateLine, PageTitle, SectionTitle, StatusPill } from "../../components/ui";
-import { CLASS_NAME, SEMESTER, TASKS } from "../../lib/data";
+import { CLASS_NAME, SEMESTER } from "../../lib/data";
+import { useHydrated, useTasks } from "../../lib/store";
 import { cx } from "../../lib/utils";
 
 const PAPER_LINES = [100, 93, 97, 74, 100, 89, 96, 61, 100, 85, 92, 68];
@@ -26,7 +27,31 @@ const ATTACHMENT = { size: "1.2 MB", pages: 3 };
 export default function TugasDetailPage() {
   const params = useParams<{ id: string }>();
   const rawId = Array.isArray(params?.id) ? params.id[0] : params?.id;
-  const task = TASKS.find((t) => String(t.id) === rawId) ?? TASKS[0];
+  const tasks = useTasks();
+  const ready = useHydrated();
+  const task = tasks.find((t) => String(t.id) === rawId);
+
+  if (!task) {
+    return (
+      <AppShell>
+        {ready && (
+          <div className="state-page">
+            <div className="state-code" aria-hidden>
+              404
+            </div>
+            <h2>Tugas tidak ditemukan</h2>
+            <p>Tugas ini mungkin sudah dihapus. Kembali ke daftar tugas untuk memilih tugas lain.</p>
+            <div className="act-row">
+              <Link href="/tugas" className="btn btn-solid">
+                Ke daftar tugas
+              </Link>
+            </div>
+          </div>
+        )}
+      </AppShell>
+    );
+  }
+
   const isDone = task.status === "ok";
   const deadline = `${task.due} 2026 · 23.59 WIB`;
 

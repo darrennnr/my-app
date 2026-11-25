@@ -5,7 +5,8 @@ import { useState } from "react";
 import AppShell from "../components/AppShell";
 import { CapIcon, ChevronRightIcon, ClockIcon, TasksIcon } from "../components/icons";
 import { DateLine, PageTitle, StatusPill } from "../components/ui";
-import { TASKS, type Task, type TaskStatus } from "../lib/data";
+import type { Task, TaskStatus } from "../lib/data";
+import { useTasks } from "../lib/store";
 
 const FILTERS = [
   { key: "all", label: "Semua" },
@@ -58,9 +59,10 @@ const matchesFilter = (status: TaskStatus, filter: FilterKey) => filter === "all
 
 /** Halaman 5: Daftar tugas */
 export default function TugasPage() {
+  const tasks = useTasks();
   const [filter, setFilter] = useState<FilterKey>("all");
 
-  const list = TASKS.filter((t) => matchesFilter(t.status, filter));
+  const list = tasks.filter((t) => matchesFilter(t.status, filter));
   const thisWeek = list.filter((t) => t.week === "now");
   const nextWeek = list.filter((t) => t.week === "next");
 

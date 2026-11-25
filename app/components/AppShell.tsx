@@ -11,6 +11,7 @@ import {
   DocIcon,
   GearIcon,
   HomeIcon,
+  ManageIcon,
   MegaphoneIcon,
   TasksIcon,
   UserCircleIcon,
@@ -26,6 +27,7 @@ const NAV = [
   { href: "/materi", label: "Materi", Icon: DocIcon, color: "c-purple" },
   { href: "/kas", label: "Kas", Icon: WalletIcon, color: "c-teal" },
   { href: "/pengumuman", label: "Pengumuman", Icon: MegaphoneIcon, color: "c-pink" },
+  { href: "/kelola", label: "Kelola", Icon: ManageIcon, color: "c-blue" },
   { href: "/profil", label: "Profil", Icon: UserIcon, color: "c-indigo" },
 ];
 

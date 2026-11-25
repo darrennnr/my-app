@@ -55,18 +55,9 @@ export default function ProfilPage() {
             <EditIcon size={18} />
             Edit Profil
           </Link>
-          <Link href="/profil/kartu" className="btn btn-outline">
-            <DownloadIcon size={18} />
-            Kartu Mahasiswa
-          </Link>
         </div>
       </div>
 
-      <StatGrid>
-        {ACADEMIC_STATS.map((s) => (
-          <StatCard key={s.label} label={s.label} value={s.value} />
-        ))}
-      </StatGrid>
 
       <div className="prof-grid">
         {/* Data mahasiswa */}

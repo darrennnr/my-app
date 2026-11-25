@@ -5,23 +5,12 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import AppShell from "../components/AppShell";
 import { BookIcon, CalendarIcon, ClockIcon, PinIcon } from "../components/icons";
 import { Chip, DateLine, PageTitle, SectionTitle } from "../components/ui";
-import { AGENDA, type CategoryTone, type TaskStatus } from "../lib/data";
+import { AGENDA } from "../lib/data";
+import { DAYS, MAX_END, START_HOUR, formatRange, type ScheduleEvent as ClassEvent } from "../lib/schedule";
+import { patchItem, useSchedule } from "../lib/store";
 import { cx, pad2 } from "../lib/utils";
 
 /* ---------- Tipe ---------- */
-type ClassEvent = {
-  id: string;
-  day: number; // 0 = Senin
-  name: string;
-  start: number; // jam desimal
-  end: number;
-  room: string;
-  tone: CategoryTone;
-  task?: TaskStatus;
-};
-
-type EventSeed = Omit<ClassEvent, "start" | "end"> & { time: string };
-
 type DragData = {
   id: string;
   event: ClassEvent;
@@ -47,10 +36,7 @@ type DragPreview = {
 };
 
 /* ---------- Konstanta tata letak ---------- */
-const START_HOUR = 7;
-const MAX_END = 18;
 const HOURS = Array.from({ length: MAX_END - START_HOUR + 1 }, (_, i) => START_HOUR + i);
-const DAYS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
 
 const HOUR_HEIGHT = 64;
 const TOP_OFFSET = 10;
@@ -58,46 +44,11 @@ const TIME_COL = 48;
 const SNAP_STEP = 1 / 12; // 5 menit
 const DRAG_THRESHOLD = 5;
 
-/* ---------- Helper waktu ---------- */
 const snapToFiveMinutes = (t: number) => Math.round(t * 12) / 12;
-
-/** "08.40" -> 8.667 */
-const parseClock = (value: string) => {
-  const [h, m] = value.split(".").map(Number);
-  return h + m / 60;
-};
-
-/** 8.667 -> "08.40" */
-const formatTime = (t: number) => {
-  const total = Math.round(t * 60);
-  return `${pad2(Math.floor(total / 60))}.${pad2(total % 60)}`;
-};
-
-const formatRange = (start: number, end: number) => `${formatTime(start)} - ${formatTime(end)}`;
-
-/* ---------- Data jadwal ---------- */
-const EVENT_SEEDS: EventSeed[] = [
-  { id: "e1", day: 0, name: "Matematika", time: "08.00 - 09.40", room: "D4 - B 205", tone: "blue", task: "ok" },
-  { id: "e2", day: 0, name: "Sistem Digital", time: "10.30 - 12.10", room: "SAW - 10.08", tone: "blue" },
-  { id: "e3", day: 0, name: "Konsep Teknologi", time: "13.00 - 15.00", room: "D4 - B 205", tone: "blue", task: "ok" },
-  { id: "e4", day: 1, name: "Agama", time: "08.00 - 09.40", room: "SAW - 05.01", tone: "peach" },
-  { id: "e5", day: 1, name: "Pancasila", time: "11.20 - 13.50", room: "SC - 02", tone: "peach", task: "bad" },
-  { id: "e6", day: 1, name: "Praktikum Sistem Digital", time: "13.50 - 15.30", room: "JJ - 303", tone: "peach", task: "ok" },
-  { id: "e7", day: 2, name: "Praktikum Allgoritma & Pemrogramman", time: "13.00 - 14.40", room: "SAW 04.06", tone: "pink", task: "ok" },
-  { id: "e8", day: 2, name: "Praktikum Sistem Komunikasi", time: "14.40 - 16.20", room: "SAW 03.08", tone: "pink", task: "bad" },
-  { id: "e9", day: 3, name: "Workshop teknologi web dan Aplikasi", time: "08.50 - 11.20", room: "SAW- 04.06", tone: "green", task: "ok" },
-  { id: "e10", day: 3, name: "Algoritma dan Pemrogramman", time: "13.50 - 15.30", room: "A - 303", tone: "green", task: "ok" },
-  { id: "e11", day: 3, name: "Sistem Komunikasi", time: "15.30 - 17.10", room: "SAW - 06.06", tone: "green" },
-];
-
-const EVENTS: ClassEvent[] = EVENT_SEEDS.map(({ time, ...rest }) => {
-  const [start, end] = time.split(" - ");
-  return { ...rest, start: parseClock(start), end: parseClock(end) };
-});
 
 /** Halaman 4: Jadwal minggu ini */
 export default function JadwalPage() {
-  const [events, setEvents] = useState<ClassEvent[]>(EVENTS);
+  const events = useSchedule();
   const [selected, setSelected] = useState<ClassEvent | null>(null);
   const [drag, setDrag] = useState<DragPreview | null>(null);
 
@@ -193,7 +144,7 @@ export default function JadwalPage() {
 
       if (cur.moved) {
         const { id, day, start, end } = cur;
-        setEvents((prev) => prev.map((item) => (item.id === id ? { ...item, day, start, end } : item)));
+        patchItem("schedule", id, { day, start, end });
       } else {
         setSelected(cur.event);
       }
@@ -296,7 +247,7 @@ export default function JadwalPage() {
                           <div className="name">{e.name}</div>
                           <div>{label}</div>
                           <div>{e.room}</div>
-                          <div>Luring</div>
+                          <div>{e.mode}</div>
                         </div>
                         {e.task && (
                           <div className="tug">
@@ -344,7 +295,7 @@ export default function JadwalPage() {
               {selected.room}
             </div>
             <div className="meta-row">
-              <Chip>Luring</Chip>
+              <Chip>{selected.mode}</Chip>
               {selected.task && <Chip>1 Tugas</Chip>}
             </div>
             <button className="btn btn-solid btn-block" onClick={() => setSelected(null)}>

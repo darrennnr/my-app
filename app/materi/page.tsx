@@ -5,24 +5,25 @@ import { useMemo, useState } from "react";
 import AppShell from "../components/AppShell";
 import { ChevronDownIcon, ChevronRightIcon, DocIcon, FolderOpenIcon, SearchIcon } from "../components/icons";
 import { DateLine, PageTitle } from "../components/ui";
-import { MATERI } from "../lib/data";
+import { useMateri } from "../lib/store";
 
 const SORT_OPTIONS = ["Terbaru", "Terlama", "A-Z"] as const;
 type SortOption = (typeof SORT_OPTIONS)[number];
 
 /** Halaman 6: Materi */
 export default function MateriPage() {
+  const materi = useMateri();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortOption>("Terbaru");
 
   const list = useMemo(() => {
-    const filtered = MATERI.filter((m) => `${m.title} ${m.dosen}`.toLowerCase().includes(query.toLowerCase()));
+    const filtered = materi.filter((m) => `${m.title} ${m.dosen}`.toLowerCase().includes(query.toLowerCase()));
     if (sort === "Terlama") return [...filtered].reverse();
     if (sort === "A-Z") {
       return [...filtered].sort((a, b) => a.title.localeCompare(b.title, "id", { numeric: true }));
     }
     return filtered;
-  }, [query, sort]);
+  }, [materi, query, sort]);
 
   return (
     <AppShell showSettings={false}>

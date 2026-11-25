@@ -60,6 +60,13 @@ export const UserIcon = ({ size, ...p }: IconProps) => (
     <path d="M3 21.5c0-5 4-8 9-8s9 3 9 8z" />
   </svg>
 );
+export const ManageIcon = ({ size, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
+    <circle cx="15" cy="7" r="2" />
+    <circle cx="9" cy="17" r="2" />
+  </svg>
+);
 
 /* ---------- Topbar & akun ---------- */
 export const UserOutlineIcon = ({ size, ...p }: IconProps) => (
@@ -141,6 +148,11 @@ export const DotsIcon = ({ size, ...p }: IconProps) => (
     <circle cx="4" cy="12" r="2.2" />
     <circle cx="12" cy="12" r="2.2" />
     <circle cx="20" cy="12" r="2.2" />
+  </svg>
+);
+export const TrashIcon = ({ size, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <path d="M4 7h16M9 7V4.5h6V7M6.5 7l.8 12.5a1.5 1.5 0 0 0 1.5 1.4h6.4a1.5 1.5 0 0 0 1.5-1.4L17.5 7M10 11v6M14 11v6" />
   </svg>
 );
 export const PinIcon = ({ size, ...p }: IconProps) => (

@@ -16,35 +16,28 @@ import {
 } from "../components/icons";
 import { Chip, Money, Pill, ProgressBar, SectionTitle, StatCard, StatGrid, StatusPill } from "../components/ui";
 import { ANNOUNCEMENTS, CAT_COLOR, relativeDay, sortNewest } from "../lib/announcements";
-import {
-  ACADEMIC_STATS,
-  AGENDA,
-  DATE_LINE,
-  MATERI,
-  STUDENT_NICKNAME,
-  TASKS,
-  TODAY_CLASSES,
-} from "../lib/data";
+import { AGENDA, DATE_LINE, STUDENT_NICKNAME, TODAY_CLASSES } from "../lib/data";
 import { createInitialPaid, summarizeKas } from "../lib/kas";
+import { useMateri, useTasks } from "../lib/store";
 import { formatRupiah, pad2 } from "../lib/utils";
 
-/* ---------- Data turunan (dihitung sekali dari sumber yang sama dengan halaman asal) ---------- */
+/* ---------- Data turunan yang tidak berubah lewat CRUD ---------- */
 const kas = summarizeKas(createInitialPaid());
-
-const tasksDone = TASKS.filter((t) => t.status === "ok").length;
-const tasksTotal = TASKS.length;
-const tasksPercent = Math.round((tasksDone / tasksTotal) * 100);
-const upcomingTasks = TASKS.filter((t) => t.status === "bad").slice(0, 3);
 
 const unreadAnnouncements = ANNOUNCEMENTS.filter((a) => !a.read);
 const latestAnnouncements = [...unreadAnnouncements].sort(sortNewest).slice(0, 3);
 
-const latestMateri = MATERI.slice(0, 3);
-const academicStats = ACADEMIC_STATS.slice(0, 3);
-
 /** Halaman 3: Dashboard */
 export default function DashboardPage() {
   const [note, setNote] = useState("");
+  const tasks = useTasks();
+  const materi = useMateri();
+
+  const tasksDone = tasks.filter((t) => t.status === "ok").length;
+  const tasksTotal = tasks.length;
+  const tasksPercent = tasksTotal ? Math.round((tasksDone / tasksTotal) * 100) : 0;
+  const upcomingTasks = tasks.filter((t) => t.status === "bad").slice(0, 3);
+  const latestMateri = materi.slice(0, 3);
 
   return (
     <AppShell>
@@ -131,6 +124,7 @@ export default function DashboardPage() {
           <SectionTitle href="/tugas">Tugas mendatang</SectionTitle>
           <div className="card card-inset">
             <div className="mini-list">
+              {upcomingTasks.length === 0 && <p className="empty">Tidak ada tugas mendatang</p>}
               {upcomingTasks.map((t) => (
                 <Link key={t.id} href={`/tugas/${t.id}`} className="mini-row">
                   <span className="ico tone-accent">
@@ -162,6 +156,7 @@ export default function DashboardPage() {
           <SectionTitle href="/materi">Materi terbaru</SectionTitle>
           <div className="card card-inset">
             <div className="mini-list">
+              {latestMateri.length === 0 && <p className="empty">Belum ada materi</p>}
               {latestMateri.map((m) => (
                 <Link key={m.id} href={`/materi/${m.id}`} className="mini-row">
                   <span className="ico tone-accent">
@@ -176,16 +171,6 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
-
-          {/* Ringkasan akademik */}
-          <SectionTitle href="/profil" linkLabel="Profil">
-            Ringkasan akademik
-          </SectionTitle>
-          <StatGrid cols={3}>
-            {academicStats.map((s) => (
-              <StatCard key={s.label} label={s.label} value={s.value} />
-            ))}
-          </StatGrid>
         </section>
 
         <section>

@@ -902,3 +902,45 @@ a.mini-row:hover { background: var(--surface-2); }
   .content { max-width: none; padding: 0; }
   body { background: none; }
 }
+/* ---------- Daftar mahasiswa satu kelas (Profil) ---------- */
+.roster { list-style: none; max-height: 560px; overflow-y: auto; margin: 0 calc(-1 * var(--sp-2)); padding: 0 var(--sp-2); }
+.roster-row { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 0; border-bottom: 1px dashed var(--surface-2); }
+.roster-row:last-child { border-bottom: none; }
+.roster-row.me { margin: 0 calc(-1 * var(--sp-2)); padding-inline: var(--sp-2); border-radius: var(--r-sm); background: var(--accent-wash); }
+.roster-no { width: 24px; flex-shrink: 0; text-align: right; font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+.roster-info { flex: 1; min-width: 0; display: grid; }
+.roster-name { font-size: var(--fs-md); font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
+.roster-me { font-weight: 600; color: var(--accent); }
+.roster-nrp { margin-top: 2px; font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+.roster-member { flex-shrink: 0; font-size: var(--fs-xs); color: var(--muted); }
+@media (max-width: 480px) { .roster-name { font-size: var(--fs-sm); } }
+
+/* ---------- Kelola data (CRUD) ---------- */
+.mg-bar { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-bottom: var(--sp-2); }
+.mg-bar .search { flex: 1 1 220px; }
+.mg-bar .btn { min-height: 48px; }
+@media (max-width: 480px) { .mg-bar .btn { flex: 1 1 100%; } }
+
+.mg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: var(--sp-3); }
+.mg-row { display: flex; align-items: flex-start; gap: var(--sp-3); padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4); }
+.mg-ico { width: 44px; height: 44px; border-radius: var(--r-md); display: grid; place-items: center; flex-shrink: 0; }
+.mg-info { flex: 1; min-width: 0; display: grid; gap: 6px; }
+.mg-title { font-size: var(--fs-md); font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
+.mg-meta { font-size: var(--fs-xs); color: var(--muted); overflow-wrap: anywhere; }
+.mg-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px var(--sp-2); font-size: var(--fs-xs); }
+.mg-actions { display: flex; flex-shrink: 0; gap: 2px; }
+.btn-ghost.danger:hover { background: var(--bad-soft); color: var(--bad); }
+@media (max-width: 480px) {
+  .mg-row { gap: var(--sp-2); padding: var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-3); }
+  .mg-ico { width: 40px; height: 40px; border-radius: var(--r-sm); }
+  .mg-ico svg { width: 20px; height: 20px; }
+  .mg-title { font-size: var(--fs-sm); }
+  .mg-actions { flex-direction: column; }
+}
+
+.mg-modal { max-width: 560px; }
+.mg-reset { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-6); padding: var(--sp-4); }
+@media (max-width: 430px) { .mg-reset .btn { width: 100%; } }
+
+.btn-danger { background: var(--bad); color: var(--card); box-shadow: var(--shadow-xs); }
+.btn-danger:hover:not(:disabled) { background: var(--bad-ink); }

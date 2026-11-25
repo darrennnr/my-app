@@ -18,7 +18,7 @@ import {
   UploadIcon,
 } from "../../components/icons";
 import { Chip, DateLine, PageTitle } from "../../components/ui";
-import { MATERI } from "../../lib/data";
+import { useHydrated, useMateri } from "../../lib/store";
 import { cx } from "../../lib/utils";
 
 type FileKind = "folder" | "pdf" | "doc" | "img" | "zip";
@@ -58,7 +58,9 @@ function KindIcon({ kind, size = 22 }: { kind: FileKind; size?: number }) {
 export default function MateriFolderPage() {
   const params = useParams<{ id: string }>();
   const rawId = Array.isArray(params?.id) ? params.id[0] : params?.id;
-  const folder = MATERI.find((m) => String(m.id) === rawId) ?? MATERI[0];
+  const materi = useMateri();
+  const ready = useHydrated();
+  const folder = materi.find((m) => String(m.id) === rawId);
 
   const [query, setQuery] = useState("");
   const [view, setView] = useState<ViewMode>("list");
@@ -67,6 +69,27 @@ export default function MateriFolderPage() {
     () => ITEMS.filter((item) => item.name.toLowerCase().includes(query.trim().toLowerCase())),
     [query]
   );
+
+  if (!folder) {
+    return (
+      <AppShell showSettings={false}>
+        {ready && (
+          <div className="state-page">
+            <div className="state-code" aria-hidden>
+              404
+            </div>
+            <h2>Folder tidak ditemukan</h2>
+            <p>Folder materi ini mungkin sudah dihapus. Kembali ke daftar materi untuk memilih folder lain.</p>
+            <div className="act-row">
+              <Link href="/materi" className="btn btn-solid">
+                Ke daftar materi
+              </Link>
+            </div>
+          </div>
+        )}
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell showSettings={false}>
