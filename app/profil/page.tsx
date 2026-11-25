@@ -2,19 +2,12 @@
 
 import Link from "next/link";
 import AppShell from "../components/AppShell";
-import {
-  BookIcon,
-  DownloadIcon,
-  EditIcon,
-  IdIcon,
-  MailIcon,
-  MapPinIcon,
-  PhoneIcon,
-  UserIcon,
-} from "../components/icons";
+import { DownloadIcon, EditIcon, IdIcon, UserIcon, UserOutlineIcon } from "../components/icons";
 import { Chip, DateLine, PageTitle, SectionTitle, StatCard, StatGrid } from "../components/ui";
 import { ACADEMIC_STATS, CLASS_NAME, LECTURERS, SEMESTER, STUDENT_NAME } from "../lib/data";
-import { PROFILE_DEFAULTS, STUDENT_NRP, STUDY_PROGRAM } from "../lib/profile";
+import { CLASS_ROSTER, ROLE_TONE, getRole } from "../lib/kelas";
+import { STUDENT_NRP, STUDY_PROGRAM } from "../lib/profile";
+import { cx } from "../lib/utils";
 
 type InfoItem = { k: string; v: string };
 
@@ -22,6 +15,7 @@ const DATA: InfoItem[] = [
   { k: "NRP", v: STUDENT_NRP },
   { k: "Nama Lengkap", v: STUDENT_NAME },
   { k: "Kelas", v: CLASS_NAME },
+  { k: "Peran di Kelas", v: getRole(STUDENT_NAME) },
   { k: "Program Studi", v: STUDY_PROGRAM },
   { k: "Jurusan", v: "Teknik Informatika" },
   { k: "Fakultas", v: "Vokasi" },
@@ -29,36 +23,6 @@ const DATA: InfoItem[] = [
   { k: "Semester", v: "1 (Satu)" },
   { k: "Dosen Wali", v: LECTURERS.math },
 ];
-
-const CONTACTS = [
-  { k: "Email", v: PROFILE_DEFAULTS.email, Icon: MailIcon },
-  { k: "No. HP", v: PROFILE_DEFAULTS.phone, Icon: PhoneIcon },
-  { k: "Alamat", v: PROFILE_DEFAULTS.address, Icon: MapPinIcon },
-];
-
-const OTHERS: InfoItem[] = [
-  { k: "Hobi", v: PROFILE_DEFAULTS.hobby },
-  { k: "Organisasi", v: PROFILE_DEFAULTS.organization },
-  { k: "Bahasa", v: PROFILE_DEFAULTS.languages },
-  { k: "Media Sosial", v: PROFILE_DEFAULTS.social },
-];
-
-function InfoCard({ title, icon, items }: { title: string; icon: React.ReactNode; items: InfoItem[] }) {
-  return (
-    <div className="card prof-card">
-      <SectionTitle>
-        {icon}
-        {title}
-      </SectionTitle>
-      {items.map((row) => (
-        <div className="info-row" key={row.k}>
-          <span className="k">{row.k}</span>
-          <span className="v">{row.v}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 /** Halaman profil mahasiswa */
 export default function ProfilPage() {
@@ -105,27 +69,53 @@ export default function ProfilPage() {
       </StatGrid>
 
       <div className="prof-grid">
-        <InfoCard title="Data mahasiswa" icon={<IdIcon size={20} />} items={DATA} />
-
-        <div className="prof-col">
-          <div className="card prof-card">
-            <SectionTitle>
-              <MailIcon size={20} />
-              Kontak
-            </SectionTitle>
-            {CONTACTS.map(({ k, v, Icon }) => (
-              <div className="info-row" key={k}>
-                <span className="k">
-                  <Icon size={16} />
-                  {k}
-                </span>
-                <span className="v">{v}</span>
-              </div>
-            ))}
-          </div>
-
-          <InfoCard title="Lainnya" icon={<BookIcon size={20} />} items={OTHERS} />
+        {/* Data mahasiswa */}
+        <div className="card prof-card">
+          <SectionTitle>
+            <IdIcon size={20} />
+            Data mahasiswa
+          </SectionTitle>
+          {DATA.map((row) => (
+            <div className="info-row" key={row.k}>
+              <span className="k">{row.k}</span>
+              <span className="v">{row.v}</span>
+            </div>
+          ))}
         </div>
+
+        {/* Data mahasiswa satu kelas */}
+        <section className="card prof-card" aria-labelledby="roster-title">
+          <SectionTitle>
+            <UserOutlineIcon size={20} />
+            <span id="roster-title">Mahasiswa kelas {CLASS_NAME}</span>
+            <span className="link-more muted">{CLASS_ROSTER.length} mahasiswa</span>
+          </SectionTitle>
+
+          <ul className="roster">
+            {CLASS_ROSTER.map((s, i) => {
+              const isMe = s.name === STUDENT_NAME;
+              return (
+                <li key={s.nrp} className={cx("roster-row", isMe && "me")}>
+                  <span className="roster-no">{i + 1}</span>
+                  <span className="roster-info">
+                    <span className="roster-name">
+                      {s.name}
+                      {isMe && <span className="roster-me"> (Kamu)</span>}
+                    </span>
+                    <span className="roster-nrp">{s.nrp}</span>
+                  </span>
+                  {s.role !== "Anggota" ? (
+                    <Chip small tone={ROLE_TONE[s.role]}>
+                      {s.role}
+                    </Chip>
+                  ) : (
+                    <span className="roster-member">Anggota</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       </div>
     </AppShell>
   );

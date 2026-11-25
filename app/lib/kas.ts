@@ -1,4 +1,5 @@
-import type { CategoryTone } from "./data";
+import { STUDENT_NAME, type CategoryTone } from "./data";
+import { STUDENT_NRP } from "./profile";
 import { pad2 } from "./utils";
 
 /* ---------- Konfigurasi ---------- */
@@ -13,7 +14,7 @@ const STUDENT_NAMES = [
   "Aisyah Putri Maharani",
   "Bagas Prasetyo",
   "Citra Dewi Lestari",
-  "Darren Alvaro",
+  STUDENT_NAME,
   "Dimas Ardiansyah",
   "Eka Nur Fadilah",
   "Farhan Maulana",
@@ -33,7 +34,7 @@ const STUDENT_NAMES = [
 
 export const STUDENTS = STUDENT_NAMES.map((name, i) => ({
   name,
-  nrp: `24116000${pad2(i + 1)}`,
+  nrp: name === STUDENT_NAME ? STUDENT_NRP : `24116000${pad2(i + 1)}`,
 }));
 
 export type Expense = {

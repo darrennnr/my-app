@@ -1,15 +1,3 @@
-/* =========================================================
-   Portal Akademik: stylesheet
-   Warna dikelola di app/lib/theme.ts (palet terang, gelap, kontras
-   tinggi) dan disuntik lewat <style> di app/layout.tsx.
-   Jangan menulis kode warna di sini.
-
-   Urutan: Tokens → Base → Aksesibilitas → Shell → Tipografi →
-   Komponen umum → Splash & Login → Dashboard → Jadwal → Tugas →
-   Materi → Kas → Pengumuman → Halaman detail → Profil →
-   Notifikasi → Pengaturan → Form → Kartu mahasiswa → Status → Print
-   ========================================================= */
-
 /* ---------- Tokens (non-warna) ---------- */
 :root {
   /* Radius */
@@ -792,6 +780,19 @@ a.mini-row:hover { background: var(--surface-2); }
 .prof-card .section-title { margin: 0 0 var(--sp-2); }
 .prof-card .section-title svg { color: var(--accent); }
 @media (max-width: 480px) { .prof-card { padding: var(--sp-3); } .prof-card .info-row { font-size: var(--fs-sm); } }
+
+/* Daftar mahasiswa satu kelas */
+.roster { list-style: none; max-height: 560px; overflow-y: auto; margin: 0 calc(-1 * var(--sp-2)); padding: 0 var(--sp-2); }
+.roster-row { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 0; border-bottom: 1px dashed var(--surface-2); }
+.roster-row:last-child { border-bottom: none; }
+.roster-row.me { margin: 0 calc(-1 * var(--sp-2)); padding-inline: var(--sp-2); border-radius: var(--r-sm); background: var(--accent-wash); }
+.roster-no { width: 24px; flex-shrink: 0; text-align: right; font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+.roster-info { flex: 1; min-width: 0; display: grid; }
+.roster-name { font-size: var(--fs-md); font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
+.roster-me { font-weight: 600; color: var(--accent); }
+.roster-nrp { margin-top: 2px; font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+.roster-member { flex-shrink: 0; font-size: var(--fs-xs); color: var(--muted); }
+@media (max-width: 480px) { .roster-name { font-size: var(--fs-sm); } }
 
 /* ---------- Notifikasi ---------- */
 .notif-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-3); align-items: start; }
