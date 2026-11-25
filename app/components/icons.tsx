@@ -293,3 +293,55 @@ export const IdIcon = ({ size, ...p }: IconProps) => (
     <path d="M6 16c.6-1.6 1.7-2.4 3-2.4s2.4.8 3 2.4M14 10h4M14 14h4" />
   </svg>
 );
+
+/* ---------- Pengaturan & notifikasi ---------- */
+export const SunIcon = ({ size, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6" />
+  </svg>
+);
+export const MonitorIcon = ({ size, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <rect x="3" y="4" width="18" height="12" rx="2" />
+    <path d="M8 20h8M12 16v4" />
+  </svg>
+);
+export const PaletteIcon = ({ size, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 1.6-2.1-.4-1.1.3-2.4 1.6-2.4H17a4 4 0 0 0 4-4c0-5-4-9.5-9-9.5Z" />
+    <circle cx="7.5" cy="11.5" r="1.1" fill="currentColor" stroke="none" />
+    <circle cx="10" cy="7.5" r="1.1" fill="currentColor" stroke="none" />
+    <circle cx="14.5" cy="7.5" r="1.1" fill="currentColor" stroke="none" />
+  </svg>
+);
+export const AccessibilityIcon = ({ size, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <circle cx="12" cy="4.5" r="1.8" />
+    <path d="M4.5 8.5 12 10l7.5-1.5M12 10v4.5M12 14.5l-3 6M12 14.5l3 6" />
+  </svg>
+);
+export const InfoIcon = ({ size, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 11v5.5" />
+    <circle cx="12" cy="7.8" r="1" fill="currentColor" stroke="none" />
+  </svg>
+);
+export const LogoutIcon = ({ size, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9" />
+  </svg>
+);
+export const PrinterIcon = ({ size, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <path d="M7 9V3.5h10V9M7 17H5a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 5 9h14a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 19 17h-2" />
+    <path d="M7 14h10v6.5H7z" />
+  </svg>
+);
+export const CameraIcon = ({ size, ...p }: IconProps) => (
+  <svg {...base(size)} {...p}>
+    <path d="M4 8h3l1.5-2.5h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
+    <circle cx="12" cy="13" r="3.5" />
+  </svg>
+);

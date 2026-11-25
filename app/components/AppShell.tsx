@@ -17,6 +17,7 @@ import {
   UserIcon,
   WalletIcon,
 } from "./icons";
+import { useNotifications } from "./Providers";
 
 const NAV = [
   { href: "/dashboard", label: "Beranda", Icon: HomeIcon },
@@ -35,26 +36,43 @@ type AppShellProps = {
 
 export default function AppShell({ children, showSettings = true }: AppShellProps) {
   const pathname = usePathname();
+  const { unreadCount } = useNotifications();
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <div className="surface">
+      <a href="#konten" className="skip-link">
+        Lewati ke konten utama
+      </a>
+
       <header className="topbar">
         <h1>
           {CLASS_NAME} · {SEMESTER}
         </h1>
         <div className="actions">
           {showSettings && (
-            <button className="icon-btn" aria-label="Pengaturan">
+            <Link
+              href="/pengaturan"
+              className="icon-btn"
+              aria-label="Pengaturan"
+              title="Pengaturan"
+              aria-current={isActive("/pengaturan") ? "page" : undefined}
+            >
               <GearIcon size={20} />
-            </button>
+            </Link>
           )}
-          <button className="icon-btn has-dot" aria-label="Notifikasi">
+          <Link
+            href="/notifikasi"
+            className={cx("icon-btn", unreadCount > 0 && "has-dot")}
+            aria-label={unreadCount > 0 ? `Notifikasi, ${unreadCount} belum dibaca` : "Notifikasi"}
+            title="Notifikasi"
+            aria-current={isActive("/notifikasi") ? "page" : undefined}
+          >
             <BellIcon size={20} />
-          </button>
-          <button className="icon-btn" aria-label="Akun">
+          </Link>
+          <Link href="/profil" className="icon-btn" aria-label="Profil saya" title="Profil saya">
             <UserCircleIcon size={22} />
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -73,7 +91,9 @@ export default function AppShell({ children, showSettings = true }: AppShellProp
             </Link>
           ))}
         </nav>
-        <main className="content">{children}</main>
+        <main id="konten" tabIndex={-1} className="content">
+          {children}
+        </main>
       </div>
     </div>
   );

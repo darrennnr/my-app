@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { EyeIcon, EyeOffIcon, LockIcon, MoonIcon, UserOutlineIcon } from "../components/icons";
+import { EyeIcon, EyeOffIcon, LockIcon, MoonIcon, SunIcon, UserOutlineIcon } from "../components/icons";
+import { usePreferences } from "../components/Providers";
 import { BrandMark } from "../components/ui";
 import { pad2 } from "../lib/utils";
 
@@ -12,8 +13,10 @@ const formatClock = (date: Date) =>
 /** Halaman 2: Login */
 export default function LoginPage() {
   const router = useRouter();
+  const { resolvedTheme, toggleTheme } = usePreferences();
   const [showPassword, setShowPassword] = useState(false);
   const [clock, setClock] = useState("--.--.--");
+  const isDark = resolvedTheme === "dark";
 
   useEffect(() => {
     const tick = () => setClock(formatClock(new Date()));
@@ -26,8 +29,14 @@ export default function LoginPage() {
     <div className="login">
       <div className="login-top">
         <span suppressHydrationWarning>{clock}</span>
-        <button aria-label="Mode gelap">
-          <MoonIcon size={32} />
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label={isDark ? "Beralih ke mode terang" : "Beralih ke mode gelap"}
+          aria-pressed={isDark}
+          onClick={toggleTheme}
+        >
+          {isDark ? <SunIcon size={28} /> : <MoonIcon size={28} />}
         </button>
       </div>
 
@@ -51,7 +60,7 @@ export default function LoginPage() {
         >
           <label className="field">
             <UserOutlineIcon size={32} />
-            <input type="text" placeholder="Username" autoComplete="username" />
+            <input type="text" placeholder="Username" autoComplete="username" aria-label="Username" />
           </label>
           <label className="field">
             <LockIcon size={32} />
@@ -59,8 +68,13 @@ export default function LoginPage() {
               type={showPassword ? "text" : "password"}
               placeholder="Password"
               autoComplete="current-password"
+              aria-label="Password"
             />
-            <button type="button" aria-label="Tampilkan password" onClick={() => setShowPassword((v) => !v)}>
+            <button
+              type="button"
+              aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+              onClick={() => setShowPassword((v) => !v)}
+            >
               {showPassword ? <EyeOffIcon size={28} /> : <EyeIcon size={28} />}
             </button>
           </label>

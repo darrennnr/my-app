@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import AppShell from "../components/AppShell";
 import {
   BookIcon,
@@ -13,11 +14,9 @@ import {
 } from "../components/icons";
 import { Chip, DateLine, PageTitle, SectionTitle, StatCard, StatGrid } from "../components/ui";
 import { ACADEMIC_STATS, CLASS_NAME, LECTURERS, SEMESTER, STUDENT_NAME } from "../lib/data";
+import { PROFILE_DEFAULTS, STUDENT_NRP, STUDY_PROGRAM } from "../lib/profile";
 
 type InfoItem = { k: string; v: string };
-
-const STUDENT_NRP = "3124500012";
-const STUDY_PROGRAM = "Teknologi Rekayasa Informatika";
 
 const DATA: InfoItem[] = [
   { k: "NRP", v: STUDENT_NRP },
@@ -32,16 +31,16 @@ const DATA: InfoItem[] = [
 ];
 
 const CONTACTS = [
-  { k: "Email", v: "darren@student.ac.id", Icon: MailIcon },
-  { k: "No. HP", v: "+62 812 3456 7890", Icon: PhoneIcon },
-  { k: "Alamat", v: "Jl. Kampus No. 12, Surabaya", Icon: MapPinIcon },
+  { k: "Email", v: PROFILE_DEFAULTS.email, Icon: MailIcon },
+  { k: "No. HP", v: PROFILE_DEFAULTS.phone, Icon: PhoneIcon },
+  { k: "Alamat", v: PROFILE_DEFAULTS.address, Icon: MapPinIcon },
 ];
 
 const OTHERS: InfoItem[] = [
-  { k: "Hobi", v: "Membaca, Badminton" },
-  { k: "Organisasi", v: "Himpunan Mahasiswa Informatika" },
-  { k: "Bahasa", v: "Indonesia, Inggris" },
-  { k: "Media Sosial", v: "@darren.ap" },
+  { k: "Hobi", v: PROFILE_DEFAULTS.hobby },
+  { k: "Organisasi", v: PROFILE_DEFAULTS.organization },
+  { k: "Bahasa", v: PROFILE_DEFAULTS.languages },
+  { k: "Media Sosial", v: PROFILE_DEFAULTS.social },
 ];
 
 function InfoCard({ title, icon, items }: { title: string; icon: React.ReactNode; items: InfoItem[] }) {
@@ -88,14 +87,14 @@ export default function ProfilPage() {
           </div>
         </div>
         <div className="act-row">
-          <button className="btn btn-solid">
+          <Link href="/profil/edit" className="btn btn-solid">
             <EditIcon size={18} />
             Edit Profil
-          </button>
-          <button className="btn btn-outline">
+          </Link>
+          <Link href="/profil/kartu" className="btn btn-outline">
             <DownloadIcon size={18} />
             Kartu Mahasiswa
-          </button>
+          </Link>
         </div>
       </div>
 
