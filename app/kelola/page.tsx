@@ -28,6 +28,7 @@ import {
 } from "../lib/schedule";
 import { nextId, removeItem, resetData, saveItem, useMateri, useSchedule, useTasks } from "../lib/store";
 import { cx } from "../lib/utils";
+import AdminManagement from "./AdminManagement";
 
 /* ---------- Konstanta ---------- */
 type Kind = "schedule" | "tasks" | "materi";
@@ -616,6 +617,8 @@ export default function KelolaPage() {
         Tambah, ubah, dan hapus jadwal, tugas, dan materi. Perubahan tampil di seluruh halaman dan tersimpan di perangkat ini.
       </p>
 
+      <AdminManagement />
+
       <div className="tabs" role="tablist" aria-label="Jenis data">
         {TABS.map((t) => (
           <button
@@ -716,6 +719,7 @@ export default function KelolaPage() {
             ))}
         </div>
       )}
+
 
       <div className="card mg-reset">
         <div className="set-text">

@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  nrp           String?  @unique
+  nickname      String?
+  avatarUrl     String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  roles         UserRole[]
+  tasksCreated  Task[]           @relation("TaskCreator")
+  taskStatuses  TaskStatus[]
+  announcements Announcement[]
+  notifications Notification[]
+  attendances   Attendance[]
+  picketDuties  PicketDuty[]
+  kasPayments   KasPayment[]
+  materials     Material[]
+  preferences   UserPreference?
+}
+
+model Role {
+  id          String     @id @default(cuid())
+  name        String     @unique // ADMIN, KETUA_KELAS, SEKRETARIS, BENDAHARA, PJ_MK, KOORD_PIKET, MAHASISWA
+  description String?
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  code        String           @unique // e.g. kas.manage, user.manage, schedule.edit
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  lecturer    String?
+  sks         Int      @default(3)
+  semester    Int      @default(1)
+  color       String?  // tone: blue, peach, etc
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  schedules   Schedule[]
+  tasks       Task[]
+  materials   Material[]
+  attendances Attendance[]
+  pjUsers     CoursePJ[]
+}
+
+model CoursePJ {
+  courseId String
+  userId   String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  // user relation omitted for simplicity; store userId
+
+  @@id([courseId, userId])
+}
+
+model Schedule {
+  id          String   @id @default(cuid())
+  courseId    String?
+  course      Course?  @relation(fields: [courseId], references: [id])
+  title       String
+  dayOfWeek   Int      // 0=Minggu ... 6=Sabtu
+  startTime   String   // "08:00"
+  endTime     String   // "09:40"
+  room        String?
+  lecturer    String?
+  type        String   @default("kuliah") // kuliah, praktikum, rapat, agenda
+  notes       String?
+  color       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  courseId    String?
+  course      Course?  @relation(fields: [courseId], references: [id])
+  title       String
+  description String?
+  dosen       String?
+  openedAt    DateTime?
+  dueAt       DateTime
+  fileName    String?
+  status      String   @default("open") // open, closed
+  createdById String?
+  createdBy   User?    @relation("TaskCreator", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  statuses    TaskStatus[]
+}
+
+model TaskStatus {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String   @default("pending") // pending, done, late
+  submittedAt DateTime?
+  note      String?
+
+  @@unique([taskId, userId])
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  courseId    String?
+  course      Course?  @relation(fields: [courseId], references: [id])
+  title       String
+  description String?
+  fileName    String?
+  fileUrl     String?
+  category    String?
+  uploadedById String?
+  uploadedBy  User?    @relation(fields: [uploadedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  body        String
+  priority    String   @default("normal") // low, normal, high
+  isPinned    Boolean  @default(false)
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id])
+  publishedAt DateTime @default(now())
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  body        String?
+  type        String   // task_deadline, schedule_change, announcement, kas, piket, system
+  link        String?
+  isRead      Boolean  @default(false)
+  meta        String?  // JSON
+  createdAt   DateTime @default(now())
+}
+
+model Attendance {
+  id          String   @id @default(cuid())
+  courseId    String?
+  course      Course?  @relation(fields: [courseId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime
+  status      String   // present, absent, late, excused
+  note        String?
+  recordedBy  String?
+  createdAt   DateTime @default(now())
+
+  @@unique([courseId, userId, date])
+}
+
+model PicketDuty {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime
+  shift       String?  // pagi, siang
+  area        String?  // kelas, lab
+  status      String   @default("scheduled") // scheduled, done, skipped
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model KasSetting {
+  id          Int      @id @default(1)
+  weeklyFee   Int      @default(10000)
+  initialBalance Int   @default(0)
+  currentWeek Int      @default(1)
+  totalWeeks  Int      @default(16)
+  updatedAt   DateTime @updatedAt
+}
+
+model KasPayment {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  week        Int
+  amount      Int
+  paidAt      DateTime @default(now())
+  note        String?
+  recordedBy  String?
+
+  @@unique([userId, week])
+}
+
+model KasExpense {
+  id          String   @id @default(cuid())
+  date        DateTime
+  note        String
+  category    String
+  amount      Int
+  tone        String?
+  recordedBy  String?
+  createdAt   DateTime @default(now())
+}
+
+model Agenda {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime?
+  location    String?
+  type        String   @default("kegiatan") // rapat, praktikum, kegiatan, kuliah
+  isAllDay    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UserPreference {
+  userId      String   @id
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme       String   @default("system")
+  locale      String   @default("id")
+  notifyTask  Boolean  @default(true)
+  notifyKas   Boolean  @default(true)
+  notifySched Boolean  @default(true)
+  data        String?  // JSON extra
+  updatedAt   DateTime @updatedAt
+}
+
+model ClassInfo {
+  id          Int      @id @default(1)
+  name        String   @default("TRI B 2026")
+  semester    String   @default("Semester 1")
+  academicYear String  @default("2026/2027")
+  updatedAt   DateTime @updatedAt
+}

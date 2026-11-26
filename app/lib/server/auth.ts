@@ -1,0 +1,147 @@
+import { SignJWT, jwtVerify } from "jose";
+import { cookies } from "next/headers";
+import bcrypt from "bcryptjs";
+import { prisma } from "./db";
+
+const COOKIE_NAME = "portal_session";
+const secret = () => {
+  const s = process.env.SESSION_SECRET;
+  if (!s || s.length < 16) throw new Error("SESSION_SECRET must be set (min 16 chars)");
+  return new TextEncoder().encode(s);
+};
+
+export type SessionUser = {
+  id: string;
+  email: string;
+  name: string;
+  nrp: string | null;
+  roles: string[];
+  permissions: string[];
+};
+
+export async function hashPassword(password: string) {
+  return bcrypt.hash(password, 12);
+}
+
+export async function verifyPassword(password: string, hash: string) {
+  return bcrypt.compare(password, hash);
+}
+
+export async function createSession(user: SessionUser) {
+  const token = await new SignJWT({
+    sub: user.id,
+    email: user.email,
+    name: user.name,
+    nrp: user.nrp,
+    roles: user.roles,
+    permissions: user.permissions,
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(secret());
+
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+}
+
+export async function destroySession() {
+  const cookieStore = await cookies();
+  cookieStore.delete(COOKIE_NAME);
+}
+
+export async function getSession(): Promise<SessionUser | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, secret());
+    return {
+      id: payload.sub as string,
+      email: payload.email as string,
+      name: payload.name as string,
+      nrp: (payload.nrp as string) || null,
+      roles: (payload.roles as string[]) || [],
+      permissions: (payload.permissions as string[]) || [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function requireSession(): Promise<SessionUser> {
+  const session = await getSession();
+  if (!session) throw new AuthError("Unauthorized", 401);
+  return session;
+}
+
+export async function requirePermission(code: string | string[]) {
+  const session = await requireSession();
+  const needed = Array.isArray(code) ? code : [code];
+  const has = needed.some((c) => session.permissions.includes(c) || session.roles.includes("ADMIN"));
+  if (!has) throw new AuthError("Forbidden", 403);
+  return session;
+}
+
+export async function requireRole(role: string | string[]) {
+  const session = await requireSession();
+  const needed = Array.isArray(role) ? role : [role];
+  const has = needed.some((r) => session.roles.includes(r) || session.roles.includes("ADMIN"));
+  if (!has) throw new AuthError("Forbidden", 403);
+  return session;
+}
+
+export class AuthError extends Error {
+  status: number;
+  constructor(message: string, status = 401) {
+    super(message);
+    this.status = status;
+  }
+}
+
+/** Load full user with roles + permissions from DB */
+export async function loadUserSession(userId: string): Promise<SessionUser | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId, isActive: true },
+    include: {
+      roles: {
+        include: {
+          role: {
+            include: {
+              permissions: { include: { permission: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!user) return null;
+
+  const roles = user.roles.map((ur) => ur.role.name);
+  const permSet = new Set<string>();
+  for (const ur of user.roles) {
+    for (const rp of ur.role.permissions) {
+      permSet.add(rp.permission.code);
+    }
+  }
+  // ADMIN gets everything
+  if (roles.includes("ADMIN")) {
+    const all = await prisma.permission.findMany();
+    all.forEach((p) => permSet.add(p.code));
+  }
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    nrp: user.nrp,
+    roles,
+    permissions: Array.from(permSet),
+  };
+}
