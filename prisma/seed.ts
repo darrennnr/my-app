@@ -1,7 +1,13 @@
-import { PrismaClient } from "@prisma/client";
+import "dotenv/config";
 import bcrypt from "bcryptjs";
+import { PrismaClient } from "../app/generated/prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaLibSql({
+  url: process.env.DATABASE_URL!,
+});
+
+const prisma = new PrismaClient({ adapter });
 
 const PERMISSIONS = [
   { code: "user.manage", description: "Kelola akun & role" },
@@ -41,7 +47,12 @@ const ROLES: { name: string; description: string; perms: string[] }[] = [
   {
     name: "SEKRETARIS",
     description: "Sekretaris kelas",
-    perms: ["announcement.manage", "agenda.manage", "attendance.manage", "schedule.manage"],
+    perms: [
+      "announcement.manage",
+      "agenda.manage",
+      "attendance.manage",
+      "schedule.manage",
+    ],
   },
   {
     name: "BENDAHARA",
@@ -64,7 +75,6 @@ const ROLES: { name: string; description: string; perms: string[] }[] = [
     perms: ["kas.view"],
   },
 ];
-
 
 async function main() {
   console.log("Seeding database...");
@@ -121,26 +131,97 @@ async function main() {
   console.log(`Admin: admin@portal.local / ${adminPass}`);
 
   // Student accounts are managed through the website; seed never recreates or deletes them.
+  // Akun mahasiswa uji (password awal = NRP)
+  const studentRoleName: Record<string, string> = {
+    "2411600014": "KETUA_KELAS",
+    "2411600002": "SEKRETARIS",
+    "2411600015": "BENDAHARA",
+  };
+  const testStudents = [
+    {
+      name: "Darren Aditya Pratama",
+      nrp: "2411600014",
+      email: "darren@student.local",
+    },
+    {
+      name: "Citra Dewi Lestari",
+      nrp: "2411600002",
+      email: "citra@student.local",
+    },
+    {
+      name: "Salsabila Nurul",
+      nrp: "2411600015",
+      email: "salsa@student.local",
+    },
+    { name: "Bagas Prasetyo", nrp: "2411600003", email: "bagas@student.local" },
+    { name: "Gita Safitri", nrp: "2411600009", email: "gita@student.local" },
+  ];
+  for (const s of testStudents) {
+    const user = await prisma.user.upsert({
+      where: { email: s.email },
+      update: {},
+      create: {
+        email: s.email,
+        name: s.name,
+        nrp: s.nrp,
+        nickname: s.name.split(" ")[0],
+        passwordHash: await bcrypt.hash(s.nrp, 12),
+      },
+    });
+    await prisma.userRole.deleteMany({ where: { userId: user.id } });
+    await prisma.userRole.create({
+      data: {
+        userId: user.id,
+        roleId: roleMap[studentRoleName[s.nrp] ?? "MAHASISWA"],
+      },
+    });
+  }
 
   // Class info
   await prisma.classInfo.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, name: "TRI B 2026", semester: "Semester 1", academicYear: "2026/2027" },
+    create: {
+      id: 1,
+      name: "TRI B 2026",
+      semester: "Semester 1",
+      academicYear: "2026/2027",
+    },
   });
 
   // Kas setting
   await prisma.kasSetting.upsert({
     where: { id: 1 },
     update: {},
-    create: { id: 1, weeklyFee: 10000, initialBalance: 150000, currentWeek: 3, totalWeeks: 16 },
+    create: {
+      id: 1,
+      weeklyFee: 10000,
+      initialBalance: 150000,
+      currentWeek: 3,
+      totalWeeks: 16,
+    },
   });
 
   // Courses
   const coursesData = [
-    { code: "MAT101", name: "Matematika", lecturer: "Dra. Rini Satiti, M. Si", color: "blue" },
-    { code: "ALG101", name: "Praktikum Algoritma", lecturer: "Afifah Dwi Ramadhani, S.ST., M.TR.T", color: "peach" },
-    { code: "WEB101", name: "Workshop Teknologi Web", lecturer: "A. Fauzi Makarim, M.TR.KOM.", color: "green" },
+    {
+      code: "MAT101",
+      name: "Matematika",
+      lecturer: "Dra. Rini Satiti, M. Si",
+      color: "blue",
+    },
+    {
+      code: "ALG101",
+      name: "Praktikum Algoritma",
+      lecturer: "Afifah Dwi Ramadhani, S.ST., M.TR.T",
+      color: "peach",
+    },
+    {
+      code: "WEB101",
+      name: "Workshop Teknologi Web",
+      lecturer: "A. Fauzi Makarim, M.TR.KOM.",
+      color: "green",
+    },
   ];
   const courseIds: Record<string, string> = {};
   for (const c of coursesData) {
@@ -154,15 +235,56 @@ async function main() {
 
   // Schedule
   const schedules = [
-    { courseCode: "MAT101", title: "Matematika", dayOfWeek: 1, startTime: "08:00", endTime: "09:40", room: "R.301", lecturer: "Dra. Rini Satiti, M. Si", color: "blue" },
-    { courseCode: "ALG101", title: "Praktikum Algoritma", dayOfWeek: 2, startTime: "10:00", endTime: "11:40", room: "Lab Komputer 2", lecturer: "Afifah Dwi Ramadhani, S.ST., M.TR.T", color: "peach", type: "praktikum" },
-    { courseCode: "WEB101", title: "Workshop Teknologi Web", dayOfWeek: 3, startTime: "13:00", endTime: "14:40", room: "R.205", lecturer: "A. Fauzi Makarim, M.TR.KOM.", color: "green" },
-    { courseCode: "MAT101", title: "Matematika (Lanjutan)", dayOfWeek: 4, startTime: "08:00", endTime: "09:40", room: "R.301", lecturer: "Dra. Rini Satiti, M. Si", color: "blue" },
+    {
+      courseCode: "MAT101",
+      title: "Matematika",
+      dayOfWeek: 1,
+      startTime: "08:00",
+      endTime: "09:40",
+      room: "R.301",
+      lecturer: "Dra. Rini Satiti, M. Si",
+      color: "blue",
+    },
+    {
+      courseCode: "ALG101",
+      title: "Praktikum Algoritma",
+      dayOfWeek: 2,
+      startTime: "10:00",
+      endTime: "11:40",
+      room: "Lab Komputer 2",
+      lecturer: "Afifah Dwi Ramadhani, S.ST., M.TR.T",
+      color: "peach",
+      type: "praktikum",
+    },
+    {
+      courseCode: "WEB101",
+      title: "Workshop Teknologi Web",
+      dayOfWeek: 3,
+      startTime: "13:00",
+      endTime: "14:40",
+      room: "R.205",
+      lecturer: "A. Fauzi Makarim, M.TR.KOM.",
+      color: "green",
+    },
+    {
+      courseCode: "MAT101",
+      title: "Matematika (Lanjutan)",
+      dayOfWeek: 4,
+      startTime: "08:00",
+      endTime: "09:40",
+      room: "R.301",
+      lecturer: "Dra. Rini Satiti, M. Si",
+      color: "blue",
+    },
   ];
   for (const s of schedules) {
     const { courseCode, ...rest } = s;
     await prisma.schedule.create({
-      data: { ...rest, courseId: courseIds[courseCode], type: rest.type || "kuliah" },
+      data: {
+        ...rest,
+        courseId: courseIds[courseCode],
+        type: rest.type || "kuliah",
+      },
     });
   }
 
@@ -196,16 +318,35 @@ async function main() {
   for (const t of tasks) {
     const { courseCode, ...rest } = t;
     await prisma.task.create({
-      data: { ...rest, courseId: courseIds[courseCode], openedAt: new Date("2026-09-08") },
+      data: {
+        ...rest,
+        courseId: courseIds[courseCode],
+        openedAt: new Date("2026-09-08"),
+      },
     });
   }
 
   // Materials
   await prisma.material.createMany({
     data: [
-      { courseId: courseIds["MAT101"], title: "Modul Determinan dan Matriks", fileName: "Modul_Determinan.pdf", category: "Modul" },
-      { courseId: courseIds["ALG101"], title: "Panduan Praktikum Minggu 1-3", fileName: "Panduan_Praktikum.pdf", category: "Panduan" },
-      { courseId: courseIds["WEB101"], title: "Slide HTML & CSS Dasar", fileName: "Slide_HTML_CSS.pdf", category: "Slide" },
+      {
+        courseId: courseIds["MAT101"],
+        title: "Modul Determinan dan Matriks",
+        fileName: "Modul_Determinan.pdf",
+        category: "Modul",
+      },
+      {
+        courseId: courseIds["ALG101"],
+        title: "Panduan Praktikum Minggu 1-3",
+        fileName: "Panduan_Praktikum.pdf",
+        category: "Panduan",
+      },
+      {
+        courseId: courseIds["WEB101"],
+        title: "Slide HTML & CSS Dasar",
+        fileName: "Slide_HTML_CSS.pdf",
+        category: "Slide",
+      },
     ],
   });
 
@@ -229,15 +370,41 @@ async function main() {
   // Expenses
   await prisma.kasExpense.createMany({
     data: [
-      { date: new Date("2026-09-02"), note: "Spidol & penghapus papan tulis", category: "Perlengkapan", amount: 35000, tone: "blue" },
-      { date: new Date("2026-09-03"), note: "Fotokopi modul Matematika", category: "Akademik", amount: 48000, tone: "peach" },
-      { date: new Date("2026-09-04"), note: "Isi ulang galon air kelas", category: "Kebutuhan", amount: 20000, tone: "green" },
-      { date: new Date("2026-09-06"), note: "Konsumsi rapat angkatan", category: "Kegiatan", amount: 75000, tone: "pink" },
+      {
+        date: new Date("2026-09-02"),
+        note: "Spidol & penghapus papan tulis",
+        category: "Perlengkapan",
+        amount: 35000,
+        tone: "blue",
+      },
+      {
+        date: new Date("2026-09-03"),
+        note: "Fotokopi modul Matematika",
+        category: "Akademik",
+        amount: 48000,
+        tone: "peach",
+      },
+      {
+        date: new Date("2026-09-04"),
+        note: "Isi ulang galon air kelas",
+        category: "Kebutuhan",
+        amount: 20000,
+        tone: "green",
+      },
+      {
+        date: new Date("2026-09-06"),
+        note: "Konsumsi rapat angkatan",
+        category: "Kegiatan",
+        amount: 75000,
+        tone: "pink",
+      },
     ],
   });
 
   // Sample payments for week 1-2
-  const users = await prisma.user.findMany({ where: { nrp: { not: "0000000000" } } });
+  const users = await prisma.user.findMany({
+    where: { nrp: { not: "0000000000" } },
+  });
   for (const u of users.slice(0, 12)) {
     await prisma.kasPayment.create({
       data: { userId: u.id, week: 1, amount: 10000 },
@@ -250,20 +417,22 @@ async function main() {
   }
 
   // Picket sample
-  const today = new Date();
-  for (let i = 0; i < 5; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() + i);
-    const u = users[i % users.length];
-    await prisma.picketDuty.create({
-      data: {
-        userId: u.id,
-        date: d,
-        shift: i % 2 === 0 ? "pagi" : "siang",
-        area: "kelas",
-        status: "scheduled",
-      },
-    });
+  if (users.length) {
+    const today = new Date();
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() + i);
+      const u = users[i % users.length];
+      await prisma.picketDuty.create({
+        data: {
+          userId: u.id,
+          date: d,
+          shift: i % 2 === 0 ? "pagi" : "siang",
+          area: "kelas",
+          status: "scheduled",
+        },
+      });
+    }
   }
 
   console.log("Seed completed.");
